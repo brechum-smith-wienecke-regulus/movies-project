@@ -1,0 +1,7 @@
+.idea/*
+*.iml
+.DS_STORE
+*.swp
+*.swo
+
+js/keys.js
