@@ -61,12 +61,12 @@ const getMovieById = (id) => {
         }
     }
 
-    return fetch(movieAPI, options)
+    return fetch(`${movieAPI}/${id}`)
         .then(response => response.json())
-        .then(data => data.filter(movie => parseFloat(movie.id) === id)[0]);
+        // .then(data => console.log(data));
 }
 
-getMovieById()
+// getMovieById()
 
 const editMovie = (id) => {
     getMovieById(id).then(movie => {
