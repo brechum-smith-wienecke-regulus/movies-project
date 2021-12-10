@@ -53,3 +53,42 @@ const addMovie = (rating, title) => {
     return fetch(movieAPI, options).then(response => response.json())
 }
 
+const getMovieById = (id) => {
+    const options= {
+        method: 'GET',
+        headers: {
+            "Content-Type": "application/json",
+        }
+    }
+
+    return fetch(movieAPI, options)
+        .then(response => response.json())
+        .then(data => data.filter(movie => parseFloat(movie.id) === id)[0]);
+
+}
+
+getMovieById()
+// <input type="text" id="title">
+//     <input type="text" id="new-rating">
+//     <input type="text" id="director">
+//     <input type="text" id="year">
+//     <input type="text" id="poster">
+//     <input type="text" id="plot">
+//     <input type="text" id="actors">
+const editMovie =(id) => {
+    getMovieById(id).then(movie => {
+        const id = movie.id;
+        console.log(movie);
+             $("#title").val(movie.title);
+            $("#new-rating").val(movie.rating);
+            $("#director").val(movie.director);
+            $("#year").val(movie.year);
+            $("#genre").val(movie.genre);
+           $("#poster").val(movie.poster);
+           $("#plot").val(movie.plot);
+           $("#actors").val(movie.actors);
+    })
+}
+
+
+

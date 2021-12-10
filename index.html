@@ -10,9 +10,9 @@
   </style>
 </head>
 <body class="container-fluid">
-<div id="loading">Loading</div>
+<div id="loading">Loading...</div>
 <div id="movie-display"></div>
-<form input="movie-title" >
+<form id="add-movie">
   <input type="text" placeholder="movie title">
   <label for="rating">Rating</label>
   <select id="rating" name="rating">
@@ -23,6 +23,15 @@
     <option value="5">5</option>
   </select>
   <button id="submit">Submit</button>
+</form>
+<form id="edit-movie">
+  <input type="text" id="title">
+  <input type="text" id="new-rating">
+  <input type="text" id="director">
+  <input type="text" id="year">
+  <input type="text" id="poster">
+  <input type="text" id="plot">
+  <input type="text" id="actors">
 </form>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
