@@ -1,14 +1,14 @@
 "use strict";
-const movieAPI= "https://pushy-paint-hippopotamus.glitch.me/movies"
+const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies"
 
 const movieDisplay = $("#movie-display")
-const getMovies = () =>
-{const options= {
-    method: 'GET',
-    headers: {
-        "Content-Type": "application/json",
+const getMovies = () => {
+    const options = {
+        method: 'GET',
+        headers: {
+            "Content-Type": "application/json",
+        }
     }
-}
     fetch(movieAPI, options)
         .then(response => response.json())
         .then(movies => {
@@ -54,7 +54,7 @@ const addMovie = (rating, title) => {
 }
 
 const getMovieById = (id) => {
-    const options= {
+    const options = {
         method: 'GET',
         headers: {
             "Content-Type": "application/json",
@@ -64,31 +64,45 @@ const getMovieById = (id) => {
     return fetch(movieAPI, options)
         .then(response => response.json())
         .then(data => data.filter(movie => parseFloat(movie.id) === id)[0]);
-
 }
 
 getMovieById()
-// <input type="text" id="title">
-//     <input type="text" id="new-rating">
-//     <input type="text" id="director">
-//     <input type="text" id="year">
-//     <input type="text" id="poster">
-//     <input type="text" id="plot">
-//     <input type="text" id="actors">
-const editMovie =(id) => {
+
+const editMovie = (id) => {
     getMovieById(id).then(movie => {
-        const id = movie.id;
         console.log(movie);
-             $("#title").val(movie.title);
-            $("#new-rating").val(movie.rating);
-            $("#director").val(movie.director);
-            $("#year").val(movie.year);
-            $("#genre").val(movie.genre);
-           $("#poster").val(movie.poster);
-           $("#plot").val(movie.plot);
-           $("#actors").val(movie.actors);
+        $("#title").val(movie.title);
+        $("#new-rating").val(movie.rating);
+        $("#director").val(movie.director);
+        $("#year").val(movie.year);
+        $("#genre").val(movie.genre);
+        $("#poster").val(movie.poster);
+        $("#plot").val(movie.plot);
+        $("#actors").val(movie.actors);
+        $("#id").val(movie.id);
     })
 }
 
+const submitEdit = () => {
+    let newMovie = {
+        title: $("#title").val(),
+        rating: $("#new-rating").val(),
+        director: $("#director").val(),
+        year: $("#year").val(),
+        genre: $("#genre").val(),
+        poster: $("#poster").val(),
+        plot: $("#plot").val(),
+        actors: $("#actors").val(),
+        id: $("#id").val()
+    }
+    const options = {
+        method: 'PUT',
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newMovie)
+    }
+    fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => console.log(data));
+}
 
 
