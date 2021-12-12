@@ -5,6 +5,8 @@ const movieDisplay = $("#movie-display")
 const getMovies = () => {
     // might as well switch the loading element back in while waiting for response
     $('#loading').show();
+    // only loading element should be visible, all elements depending on response should be hidden
+    $('#movie-display #create-add-form #create-edit-form #user-input').hide();
     // clear out the old contents of movie-display while we prepare to build the new contents from response
     while (movieDisplay.get(0).firstChild) {
         // using .get(0) here unwraps the moviesDisplay out of jQuery and back into vanilla JS
@@ -19,12 +21,16 @@ const getMovies = () => {
     fetch(movieAPI, options)
         .then(response => response.json())
         .then(movies => {
-            hideLoading();
-
+            $('#movie-display', '#create-add-form', '#user-input').show()
             console.log(movies);
+            hideLoading();
+            // movieDisplay.show();
             // map each movie returned from db into a new array of html strings
             const movieList = movies.map(movie => renderMovie(movie));
             movieDisplay.append(movieList);
+
+            // enable input for user to show form to add a film
+            enableUserFormInput();
         })
 }
 getMovies();
@@ -125,4 +131,35 @@ const deleteMovie = (id) => {
         },
     }
     fetch(`${movieAPI}/${id}`, options).then(response => response.json()).then(data => console.log(data));
+}
+
+const buildAddForm = () => {
+
+    let addForm =
+        `<form id="add-movie">
+            <input type="text" placeholder="movie title">
+            <label for="rating">Rating</label>
+            <select id="rating" name="rating">
+                <option value="1"> 1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+          </select>
+          <button id="submit-add">Submit</button>
+        </form>`;
+
+    $('#user-input').append(addForm);
+}
+
+const enableUserFormInput = () => {
+    // userAddMovieButton toggles display of user's add movie form
+    const userAddMovieButton = $('#create-add-form');
+    userAddMovieButton.show();
+    userAddMovieButton.on('click', (e) => {
+        e.preventDefault();
+        buildAddForm();
+        userAddMovieButton.hide();
+    });
+
 }
