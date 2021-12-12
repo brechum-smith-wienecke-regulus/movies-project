@@ -19,11 +19,12 @@ const getMovies = () => {
     fetch(movieAPI, options)
         .then(response => response.json())
         .then(movies => {
-            hideLoading()
-            movies.forEach(movie => {
-                movieDisplay.append(renderMovie(movie))
-                console.log(movie);
-            })
+            hideLoading();
+
+            console.log(movies);
+            // map each movie returned from db into a new array of html strings
+            const movieList = movies.map(movie => renderMovie(movie));
+            movieDisplay.append(movieList);
         })
 }
 getMovies();
