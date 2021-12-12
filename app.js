@@ -33,7 +33,10 @@ const hideLoading = () => {
 }
 
 const renderMovie = (movie) => {
-    let movieHtml = `<h1>${movie.title}</h1>`
+    let movieHtml = `<h1>${movie.title}</h1>`;
+    movieHtml += `<p>rating: ${movie.rating}</p>`;
+    movieHtml += `<button class="movie-delete">Delete</button>`;
+    movieHtml += `<button class="movie-edit">Edit</button>`;
     return movieHtml
 }
 
