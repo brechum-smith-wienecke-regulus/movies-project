@@ -106,3 +106,12 @@ const submitEdit = () => {
 }
 
 
+const deleteMovie = (id) => {
+    const options = {
+        method: 'DELETE',
+        headers: {
+            "Content-Type": "application/json",
+        },
+    }
+    fetch(`${movieAPI}/${id}`, options).then(response => response.json()).then(data => console.log(data));
+}
