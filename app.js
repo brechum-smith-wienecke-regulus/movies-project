@@ -3,6 +3,13 @@ const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies"
 
 const movieDisplay = $("#movie-display")
 const getMovies = () => {
+    // might as well switch the loading element back in while waiting for response
+    $('#loading').show();
+    // clear out the old contents of movie-display while we prepare to build the new contents from response
+    while (movieDisplay.get(0).firstChild) {
+        // using .get(0) here unwraps the moviesDisplay out of jQuery and back into vanilla JS
+        movieDisplay.get(0).removeChild(movieDisplay.get(0).lastChild);
+    }
     const options = {
         method: 'GET',
         headers: {
