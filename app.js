@@ -160,21 +160,6 @@ $(document).ready(() => {
 
     }
 
-    // this function is essentially useless and we probably won't need it again
-    // const getMovieById = (id) => {
-    //     const options = {
-    //         method: 'GET',
-    //         headers: {
-    //             "Content-Type": "application/json",
-    //         }
-    //     }
-    //
-    //     return fetch(`${movieAPI}/${id}`)
-    //         .then(response => response.json())
-    //     .then(data => console.log(data));
-    // }
-
-
     const editMovie = (movie) => {
         // selecting our form area for movie listing editing
         // using jquery data to preserve info about user movie selection
@@ -253,10 +238,10 @@ $(document).ready(() => {
             rating: $("#new-rating").val(),
             director: $("#director").val(),
             year: $("#year").val(),
-            genre: $("#genre").val(),
+            genre: $("#genre").val().split(','),
             poster: $("#poster").val(),
             plot: $("#plot").val(),
-            actors: $("#actors").val(),
+            actors: $("#actors").val().split(','),
             // the id is here an edge case. users are not able to see/manipulate these ids directly
             // here we are retrieving it from a jQuery data method instead of taking user input
             id: editForm.data('movie').id,
@@ -340,7 +325,6 @@ $(document).ready(() => {
             if (DEBUG.verbose) console.log('Submit Add event', e)
             // grab genres field and convert to array
             let genres = $('#add-genre').val().split(',');
-            console.log(genres);
             // pass the three input fields to our addMovie function
             addMovie($('#add-rating').val(), $('#add-title').val(), genres);
             // destroy old form
