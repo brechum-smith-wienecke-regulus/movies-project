@@ -244,48 +244,54 @@ $(document).ready(() => {
         destroyElementContents(editForm);
 
         // addPoster(newMovie).then(movie => {
-        if (newMovie.poster === 'undefined' || newMovie.poster === '') {
-
-            let query = newMovie.title.split('+');
-            const options = {
-                method: 'GET',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-            fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
-                .then(response => response.json())
-                .then(data => {
-                    let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
-                    newMovie.poster = url;
-                    return newMovie;
-                })
-                .then(newMovie => {
-                    const options = {
-                        method: 'PUT',
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(newMovie)
-                    }
-                    fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
-                        if (DEBUG.verbose) console.log(data)
-                        getMovies();
-                    });
+        // if (newMovie.poster === 'undefined' || newMovie.poster === '') {
+        //
+        //     let query = newMovie.title.split('+');
+        //     const options = {
+        //         method: 'GET',
+        //         headers: {
+        //             "Content-Type": "application/json",
+        //         },
+        //     }
+        //     fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
+        //             newMovie.poster = url;
+        //             return newMovie;
+        //         })
+        //         .then(newMovie => {
+        //             const options = {
+        //                 method: 'PUT',
+        //                 headers: {
+        //                     "Content-Type": "application/json",
+        //                 },
+        //                 body: JSON.stringify(newMovie)
+        //             }
+        //             fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
+        //                 if (DEBUG.verbose) console.log(data)
+        //                 getMovies();
+        //             });
+        //         });
+        // } else {
+        addPoster(newMovie)
+            .catch(movie => {
+                movie.poster = 'noimage';
+            })
+            .finally(movie => {
+                console.log(movie);
+                const options = {
+                    method: 'PUT',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(movie)
+                }
+                fetch(`${movieAPI}/${movie.id}`, options).then(response => response.json()).then(data => {
+                    if (DEBUG.verbose) console.log(data)
+                    getMovies();
                 });
-        } else {
-            const options = {
-                method: 'PUT',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newMovie)
-            }
-            fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
-                if (DEBUG.verbose) console.log(data)
-                getMovies();
             });
-        }
     }
 
 
@@ -414,25 +420,42 @@ $(document).ready(() => {
     }
 
     const addPoster = (movie) => {
-        if (movie.poster === 'undefined' || movie.poster === '') {
+        // if (movie.poster === 'undefined' || movie.poster === '') {
+        //
 
-        let query = movie.title.split('+');
-        const options = {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
-        fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
-            .then(response => response.json())
-            .then(data => {
-                let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
-                movie.poster = url;
-                return Promise.resolve(movie);
-            });
-        } else {
-            return Promise.resolve(movie);
-        }
+
+        // fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
+        //         movie.poster = url;
+        //         return Promise.resolve(movie);
+        //     });
+        // } else {
+        //     return Promise.resolve(movie);
+        // }
+        return new Promise((resolve, reject) => {
+            if (movie.poster === 'undefined' || movie.poster === '') {
+                let query = movie.title.split('+');
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+                fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.results.length === 0) return reject(movie);
+                        let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
+                        movie.poster = url;
+                        console.log(data);
+                        return resolve(movie);
+                    });
+            } else {
+                return resolve(movie);
+            }
+        })
     }
 
     // all actual work done that is not simply function definitions should go in here to keep organized :)
