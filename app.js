@@ -2,7 +2,6 @@
 const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies"
 
 
-
 const movieDisplay = $("#movie-display")
 
 // this function destroys all children of an element
@@ -59,8 +58,8 @@ const hideLoading = () => {
 }
 
 const renderMovie = (movie) => {
-    let movieHtml =     `<h1>${movie.title}</h1>`;
-    movieHtml       +=  `<p>rating: ${movie.rating}</p>`;
+    let movieHtml = `<h1>${movie.title}</h1>`;
+    movieHtml += `<p>rating: ${movie.rating}</p>`;
     movieHtml += `<button class="movie-delete">Delete</button>`;
     movieHtml += `<button class="movie-edit">Edit</button>`;
     const movieContainer = $(document.createElement('div'))
@@ -72,26 +71,57 @@ const renderMovie = (movie) => {
 }
 
 const addMovie = (rating, title) => {
-    const movie = {
-        title: title,
-        rating: rating,
-        director: "",
-        year: "",
-        genre: "",
-        poster: "",
-        plot: "",
-        actors: "",
-        id: "",
-    }
-    const options = {
-        method: 'POST',
+    // we look up the latest status from the database regarding movies so we avoid id collision
+    fetch(movieAPI, {
+        method: 'GET',
         headers: {
             "Content-Type": "application/json",
-        },
-        body: JSON.stringify(movie)
-    }
-    console.log(movie);
-    return fetch(movieAPI, options).then(response => response.json())
+        }
+    })
+        .then(response => response.json())
+        .then(movies => {
+            // get an array of all existing ids in database
+            const existingIds = movies.map(movie => movie.id);
+
+            let newId = null;
+            for (let i = 0; i < existingIds.length; i++) {
+                if (!existingIds.includes(i + 1)) {
+                    newId = i + 1;
+                    break;
+                }
+            }
+            // we really do not want to push objects to our database that have bad ids
+            // using try catch here to prevent submitting new films with unset IDs
+            try {
+                if (newId === null) throw 'ID assignment issue, cancelling post request';
+                const movie = {
+                    title: title,
+                    rating: rating,
+                    director: "",
+                    year: "",
+                    genre: "",
+                    poster: "",
+                    plot: "",
+                    actors: "",
+                    id: newId,
+                }
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(movie)
+                }
+                console.log(movie);
+                return fetch(movieAPI, options)
+                    .then(response => response.json())
+                    .then(getMovies)
+            }
+            catch(error) {
+                console.error(error)
+            }
+        });
+
 }
 
 const getMovieById = (id) => {
@@ -104,10 +134,9 @@ const getMovieById = (id) => {
 
     return fetch(`${movieAPI}/${id}`)
         .then(response => response.json())
-        // .then(data => console.log(data));
+    // .then(data => console.log(data));
 }
 
-// getMovieById()
 
 const editMovie = (movie) => {
 
@@ -132,26 +161,15 @@ const editMovie = (movie) => {
     <input type="text" id="poster" value="${movie.poster}">
     <label for="plot">Plot</label>
     <textarea id="plot">${movie.plot}</textarea>
+    <label for="actors">Actors</label>
     <input type="text" id="actors" value="${movie.actors}">
+    <br>
     <button id="submit-edit">Submit</button>
     <button id="reset-edit">Reset</button>`;
 
     editForm.append(formHtml);
 
     $('#submit-edit').on('click', (e) => submitEdit(e))
-
-    // getMovieById(id).then(movie => {
-    //     console.log(movie);
-    //     $("#title").val(movie.title);
-    //     $("#new-rating").val(movie.rating);
-    //     $("#director").val(movie.director);
-    //     $("#year").val(movie.year);
-    //     $("#genre").val(movie.genre);
-    //     $("#poster").val(movie.poster);
-    //     $("#plot").val(movie.plot);
-    //     $("#actors").val(movie.actors);
-    //     $("#id").val(movie.id);
-    // })
 }
 
 const submitEdit = (e) => {
@@ -170,6 +188,8 @@ const submitEdit = (e) => {
     }
     // we are done with the form contents, destroy them
     destroyElementContents($('#edit-movie'));
+
+    // make the put request
     const options = {
         method: 'PUT',
         headers: {
@@ -195,15 +215,15 @@ const deleteMovie = (id) => {
 }
 
 const buildAddForm = () => {
-
     let addForm =
         `<form id="add-movie">
-            <input type="text" placeholder="movie title">
+            <label for="add-title">Title</label>
+            <input id="add-title" type="text" placeholder="">
             <label for="rating">Rating</label>
-            <select id="rating" name="rating">
+            <select id="add-rating" name="rating">
                 <option value="1"> 1</option>
                 <option value="2">2</option>
-                <option value="3">3</option>
+                <option selected value="3">3</option>
                 <option value="4">4</option>
                 <option value="5">5</option>
           </select>
@@ -211,6 +231,11 @@ const buildAddForm = () => {
         </form>`;
 
     $('#user-input').append(addForm);
+
+    $('#submit-add').on('click', (e) => {
+        e.preventDefault();
+        addMovie($('#add-rating').val(), $('#add-title').val());
+    });
 }
 
 const enableUserFormInput = () => {
