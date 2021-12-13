@@ -1,17 +1,27 @@
 "use strict";
 const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies"
 
+
+
 const movieDisplay = $("#movie-display")
+
+// this function destroys all children of an element
+const destroyElementContents = (element) => {
+    while (element.get(0).firstChild) {
+        // using .get(0) here unwraps the element out of jQuery and back into vanilla JS
+        element.get(0).removeChild(element.get(0).lastChild);
+    }
+    return element;
+}
+
 const getMovies = () => {
     // might as well switch the loading element back in while waiting for response
     $('#loading').show();
     // only loading element should be visible, all elements depending on response should be hidden
     $('#movie-display #create-add-form #create-edit-form #user-input').hide();
     // clear out the old contents of movie-display while we prepare to build the new contents from response
-    while (movieDisplay.get(0).firstChild) {
-        // using .get(0) here unwraps the moviesDisplay out of jQuery and back into vanilla JS
-        movieDisplay.get(0).removeChild(movieDisplay.get(0).lastChild);
-    }
+    destroyElementContents(movieDisplay);
+
     const options = {
         method: 'GET',
         headers: {
@@ -51,7 +61,6 @@ const hideLoading = () => {
 const renderMovie = (movie) => {
     let movieHtml =     `<h1>${movie.title}</h1>`;
     movieHtml       +=  `<p>rating: ${movie.rating}</p>`;
-    // movieHtml       +=  `<p data-id="${movie.id}"></p>`;
     movieHtml += `<button class="movie-delete">Delete</button>`;
     movieHtml += `<button class="movie-edit">Edit</button>`;
     const movieContainer = $(document.createElement('div'))
@@ -102,34 +111,35 @@ const getMovieById = (id) => {
 
 const editMovie = (movie) => {
 
-    // destroy old form contents
-    // destroyElementContents()
     // selecting our form area for movie listing editing
     // using jquery data to preserve info about user movie selection
     const editForm = $('#edit-movie').data('movie', movie);
     // destroy old form (if any) before preparing the new one
     destroyElementContents(editForm);
 
-
-
-    /*  */
-    let formHtml = `<input type="text" id="title" value="${movie.title}">
-                    <input type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
-                    <input type="text" id="director" value="${movie.director}">
-                    <input type="text" id="year" value="${movie.year}">
-                    <input type="text" id=genre value="${movie.genre}">
-                    <input type="text" id="poster" value="${movie.poster}">
-                    <textarea id="plot">${movie.plot}</textarea>
-                    <input type="text" id="actors" value="${movie.actors}">
-                    <button id="submit-edit">Submit</button>
-                    <button id="reset-edit">Reset</button>`;
+    let formHtml = `
+    <label for="title">Title</label>
+    <input type="text" id="title" value="${movie.title}">
+    <label for="new-rating">Rating</label>
+    <input type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
+    <label for="director">Director</label>
+    <input type="text" id="director" value="${movie.director}">
+    <label for="year">Year</label>
+    <input type="text" id="year" value="${movie.year}">
+    <label for="genre">Genre</label>
+    <input type="text" id=genre value="${movie.genre}">
+    <label for="poster">Poster</label>
+    <input type="text" id="poster" value="${movie.poster}">
+    <label for="plot">Plot</label>
+    <textarea id="plot">${movie.plot}</textarea>
+    <input type="text" id="actors" value="${movie.actors}">
+    <button id="submit-edit">Submit</button>
+    <button id="reset-edit">Reset</button>`;
 
     editForm.append(formHtml);
 
     $('#submit-edit').on('click', (e) => submitEdit(e))
-        // const title = $(document.createElement('input'))
-        //     .attr('id', 'title', 'type', 'text')
-        //     .val()
+
     // getMovieById(id).then(movie => {
     //     console.log(movie);
     //     $("#title").val(movie.title);
@@ -145,6 +155,7 @@ const editMovie = (movie) => {
 }
 
 const submitEdit = (e) => {
+    // if there was an event that called this function, prevent page refresh
     if (e) e.preventDefault();
     let newMovie = {
         title: $("#title").val(),
@@ -166,7 +177,10 @@ const submitEdit = (e) => {
         },
         body: JSON.stringify(newMovie)
     }
-    fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => console.log(data));
+    fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
+        console.log(data)
+        getMovies();
+    });
 }
 
 
@@ -211,16 +225,3 @@ const enableUserFormInput = () => {
 
 }
 
-const buildEditForm = (id) => {
-
-}
-
-// this function destroys all children of an element
-const destroyElementContents = (element) => {
-    while (element.get(0).firstChild) {
-        // using .get(0) here unwraps the element out of jQuery and back into vanilla JS
-        element.get(0).removeChild(element.get(0).lastChild);
-    }
-    // returns itself to allow chaining
-    return element;
-}
