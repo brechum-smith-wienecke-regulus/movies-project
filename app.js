@@ -29,6 +29,9 @@ const getMovies = () => {
             const movieList = movies.map(movie => renderMovie(movie));
             movieDisplay.append(movieList);
 
+            // setup event listener for edit buttons
+            $('.movie-edit').on('click', () => console.log($(this).attr('data-id')));
+
             // enable input for user to show form to add a film
             enableUserFormInput();
         })
@@ -44,7 +47,11 @@ const renderMovie = (movie) => {
     movieHtml += `<p>rating: ${movie.rating}</p>`;
     movieHtml += `<button class="movie-delete">Delete</button>`;
     movieHtml += `<button class="movie-edit">Edit</button>`;
-    return movieHtml
+    return $(document.createElement('div'))
+        .addClass('movie-container')
+        .data('id', movie.id)
+        .append(movieHtml);
+
 }
 
 const addMovie = (rating, title) => {
