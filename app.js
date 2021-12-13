@@ -320,6 +320,7 @@ $(document).ready(() => {
      */
 
     const buildAddForm = () => {
+        destroyElementContents($('#add-movie-modal'));
         // build our form to take user input for adding movies here
         let addForm = `
     <div class="modal-dialog">
@@ -377,6 +378,7 @@ $(document).ready(() => {
 
     const enableUserFormInput = () => {
         destroyElementContents($('#add-movie-modal'));
+
         // userAddMovieButton toggles display of user's add movie form
         const userAddMovieButton = $('#create-add-form');
         userAddMovieButton.show();
