@@ -429,20 +429,23 @@ $(document).ready(() => {
     }
 
     const dynamicSort = (property) => {
-        console.log(property)
+        if(DEBUG.verbose) console.log(property)
         let sortOrder = 1;
 
         if(property[0] === "-") {
             sortOrder = -1;
             property = property.substr(1);
         }
-        // console.log(a[property]);
 
         return function (a, b) {
+            if (property === 'genre') {
+                a = a.join(' ');
+                b = b.join(' ');
+            }
             if(sortOrder === -1){
-                return b[property].join(' ').localeCompare(a[property]);
+                return b[property].localeCompare(a[property]);
             }else{
-                return a[property].join(' ').localeCompare(b[property]);
+                return a[property].localeCompare(b[property]);
             }
         }
     }
