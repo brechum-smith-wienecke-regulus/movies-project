@@ -91,14 +91,14 @@ $(document).ready(() => {
 
 
     const renderMovie = (movie) => {
-        let movieHtml = `<img class="movie-poster" src="${(movie.poster === 'noimage')
+        let movieHtml = `<img class="movie-poster mr-2 pr-2" src="${(movie.poster === 'noimage')
             ? 'https://dummyimage.com/200x400/BBB/202020.png&text=No+Poster+Available' 
             : movie.poster}">
                             <div class="card-body">
                              <h5 class="card-title">${movie.title}</h5>`;
         movieHtml +=        `<p class="card-text">rating: ${movie.rating}</p>`;
         movieHtml +=        `<p class="card-text">genre: ${movie.genre}</p>`;
-        movieHtml +=        `<button type="button" class="movie-edit btn btn-primary" data-toggle="modal" data-target="#edit-form-modal">Edit</button>`
+        movieHtml +=        `<button type="button" class="movie-edit btn btn-primary mr-3" data-toggle="modal" data-target="#edit-form-modal">Edit</button>`
         movieHtml +=        `<button class="movie-delete btn btn-danger">Delete</button>`;
         movieHtml +=    `</div>`
         const movieContainer = $(document.createElement('div'))
