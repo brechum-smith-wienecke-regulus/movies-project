@@ -2,24 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Promises Exercises</title>
+  <title>Holy Movies Shack</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
         integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 
-  </style>
 </head>
 <body class="container-fluid">
+<nav class="navbar navbar-light bg-light">
+  <a class="navbar-brand">Movies</a>
+  <form class="form-inline">
+    <input class="form-control mr-sm-2" type="search" placeholder="Filter" aria-label="Filter" id="movie-filter">
+    <select class="form-control mr-sm-2" id="sort-select">
+      <option value="default" selected>Default</option>
+      <option value="genre">Genre</option>
+      <option value="title">Title</option>
+      <option value="rating">Rating</option>
+    </select>
+  </form>
+</nav>
 <div style="width: 100vw; height: 100vh" class="text-center" id="loading">
   <h4>Loading...</h4>
 </div>
-<div id="movie-display"></div>
-<button id="create-add-form">Add a movie</button>
-<div id="add-movie">
+<div id="movie-display" class="row m-n1"></div>
+
+<button id="create-add-form" class="btn btn-block btn-primary my-2" data-toggle="modal" data-target="#add-movie-modal">Add a movie</button>
+<div id="add-movie-modal" class="modal fade" tabindex="-1" aria-labelledby="addMovieModal" aria-hidden="true">
 </div>
 
-<form id="edit-movie">
-</form>
+<div class="modal fade" id="edit-form-modal" tabindex="-2" aria-labelledby="editFormModal" aria-hidden="true">
+</div>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 <script src="app.js"></script>

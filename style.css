@@ -1,0 +1,8 @@
+.movie-poster {
+
+/* at 4 cols wide img should be roughly 350px tall */
+
+    width: 24vw;
+    height: 45vh;
+    object-fit: cover;
+}
