@@ -2,7 +2,7 @@
 let DEBUG = {
     // verbose: when true, many different important steps of the app will have details printed into the console
     //          default - false
-    verbose: true,
+    verbose: false,
 }
 
 $(document).ready(() => {
@@ -44,10 +44,18 @@ $(document).ready(() => {
                 $('#create-add-form, #movie-display').show()
                 // hide loading
                 $('#loading').hide();
+                // we can change the order here
+                const sortBy = $('#sort-select').val();
+                const sortIn = $('#order-select').val();
+                console.log('sort in', sortIn, 'sort by', sortBy);
+                if (sortBy !== 'default') {
+                    movies.sort(dynamicSort(`${sortIn}${sortBy}`));
+                } else if (sortIn === '-') {
+                    movies.reverse();
+                }
                 // map each movie returned from db into a new array of html strings
                 const movieList = movies.map(movie => renderMovie(movie));
-                // we can change the order here
-                // movieList.
+
                 // draw movies on screen
                 movieDisplay.append(movieList);
 
@@ -84,7 +92,7 @@ $(document).ready(() => {
 
     const renderMovie = (movie) => {
         let movieHtml = `<img class="movie-poster" src="${(movie.poster === 'noimage')
-            ? 'https://dummyimage.com/400x400/BBB/202020.png&text=No+Poster+Available' 
+            ? 'https://dummyimage.com/200x400/BBB/202020.png&text=No+Poster+Available' 
             : movie.poster}">
                             <div class="card-body">
                              <h5 class="card-title">${movie.title}</h5>`;
@@ -387,6 +395,8 @@ $(document).ready(() => {
             buildAddForm();
         });
 
+        $('#sort-select, #order-select').on('change', getMovies);
+
     }
 
     const filterMovieList = () => {
@@ -399,18 +409,20 @@ $(document).ready(() => {
     }
 
     const dynamicSort = (property) => {
-        var sortOrder = 1;
+        console.log(property)
+        let sortOrder = 1;
 
         if(property[0] === "-") {
             sortOrder = -1;
             property = property.substr(1);
         }
+        // console.log(a[property]);
 
-        return function (a,b) {
-            if(sortOrder == -1){
-                return b[property].localeCompare(a[property]);
+        return function (a, b) {
+            if(sortOrder === -1){
+                return b[property].join(' ').localeCompare(a[property]);
             }else{
-                return a[property].localeCompare(b[property]);
+                return a[property].join(' ').localeCompare(b[property]);
             }
         }
     }
@@ -423,20 +435,6 @@ $(document).ready(() => {
     }
 
     const addPoster = (movie) => {
-        // if (movie.poster === 'undefined' || movie.poster === '') {
-        //
-
-
-        // fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
-        //         movie.poster = url;
-        //         return Promise.resolve(movie);
-        //     });
-        // } else {
-        //     return Promise.resolve(movie);
-        // }
         return new Promise((resolve, reject) => {
             if (movie.poster === 'undefined' || movie.poster === '') {
                 let query = movie.title.split('+');
@@ -467,19 +465,5 @@ $(document).ready(() => {
         getMovies();
         filterMovieList();
 
-
-        // fetch(`https://api.themoviedb.org/3/movie/550?api_key=${TMDB_KEY}&`, options)
-        //     .then(response => response.json())
-        //     .then(data => {
-        //     console.log(data);
-        // });
-
-
-        // fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=Jack+Reacher`, options)
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         console.log(data.results[0].poster_path);
-        //     });
-        // {api_key}
     })();
 });
