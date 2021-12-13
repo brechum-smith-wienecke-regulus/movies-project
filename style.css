@@ -12,3 +12,8 @@
 .movie-container {
     min-width: 20vw;
 }
+
+/* movie card controls (edit/delete) are invisible until the card is hovered over */
+.card-footer {
+    display: none;
+}

@@ -59,6 +59,9 @@ $(document).ready(() => {
                 // draw movies on screen
                 movieDisplay.append(movieList);
 
+                // setup card controls
+                showMovieControls();
+
                 // setup event listener for edit buttons
                 $('.movie-edit').on('click', function (e) {
                     e.preventDefault();
@@ -185,6 +188,14 @@ $(document).ready(() => {
                     console.error(error)
                 }
             });
+    }
+
+    const showMovieControls = () => {
+        $('.movie-container').hover(function () {
+            $(this).children('.card-footer').css('display', 'block');
+        }, function () {
+            $(this).children('.card-footer').css('display', 'none');
+        });
     }
 
     const editMovie = (movie) => {
