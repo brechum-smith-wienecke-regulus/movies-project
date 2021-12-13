@@ -136,17 +136,36 @@ $(document).ready(() => {
                         actors: "",
                         id: newId,
                     }
-                    const options = {
-                        method: 'POST',
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(movie)
-                    }
-                    if (DEBUG.verbose) console.log('Adding:', movie);
-                    return fetch(movieAPI, options)
-                        .then(response => response.json())
-                        .then(getMovies);
+                    addPoster(movie)
+                        .then(movie => {
+                            if (DEBUG.verbose) console.log(movie);
+                            const options = {
+                                method: 'POST',
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(movie)
+                            }
+                            if (DEBUG.verbose) console.log('Adding:', movie);
+                            return fetch(movieAPI, options)
+                                .then(response => response.json())
+                                .then(getMovies);
+                        })
+                        .catch(movie => {
+                            movie.poster = 'noimage';
+                            if (DEBUG.verbose) console.log(movie);
+                            const options = {
+                                method: 'POST',
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(movie)
+                            }
+                            if (DEBUG.verbose) console.log('Adding:', movie);
+                            return fetch(movieAPI, options)
+                                .then(response => response.json())
+                                .then(getMovies);
+                        });
                 } catch (error) {
                     console.error(error)
                 }
@@ -275,10 +294,7 @@ $(document).ready(() => {
         //         });
         // } else {
         addPoster(newMovie)
-            .catch(movie => {
-                movie.poster = 'noimage';
-            })
-            .finally(movie => {
+            .then(movie => {
                 console.log(movie);
                 const options = {
                     method: 'PUT',
@@ -287,11 +303,31 @@ $(document).ready(() => {
                     },
                     body: JSON.stringify(movie)
                 }
-                fetch(`${movieAPI}/${movie.id}`, options).then(response => response.json()).then(data => {
-                    if (DEBUG.verbose) console.log(data)
-                    getMovies();
-                });
+                fetch(`${movieAPI}/${movie.id}`, options)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (DEBUG.verbose) console.log(data)
+                        getMovies();
+                    });
+            })
+            .catch(movie => {
+                movie.poster = 'noimage';
+                console.log(movie);
+                const options = {
+                    method: 'PUT',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(movie)
+                }
+                fetch(`${movieAPI}/${movie.id}`, options)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (DEBUG.verbose) console.log(data)
+                        getMovies();
+                    });
             });
+
     }
 
 
