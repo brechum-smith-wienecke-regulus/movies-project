@@ -2,7 +2,7 @@
 let DEBUG = {
     // verbose: when true, many different important steps of the app will have details printed into the console
     //          default - false
-    verbose: true,
+    verbose: false,
 }
 
 $(document).ready(() => {
@@ -44,9 +44,17 @@ $(document).ready(() => {
                 $('#create-add-form, #movie-display').show()
                 // hide loading
                 $('#loading').hide();
+                // we can change the order here
+                const sortBy = $('#sort-select').val();
+                const sortIn = $('#order-select').val();
+                console.log('sort in', sortIn, 'sort by', sortBy);
+                if (sortBy !== 'default') {
+                    movies.sort(dynamicSort(`${sortIn}${sortBy}`));
+                } else if (sortIn === '-') {
+                    movies.reverse();
+                }
                 // map each movie returned from db into a new array of html strings
                 const movieList = movies.map(movie => renderMovie(movie));
-                // we can change the order here
 
                 // draw movies on screen
                 movieDisplay.append(movieList);
@@ -83,7 +91,9 @@ $(document).ready(() => {
 
 
     const renderMovie = (movie) => {
-        let movieHtml = `<img class="movie-poster" src="${movie.poster}">
+        let movieHtml = `<img class="movie-poster" src="${(movie.poster === 'noimage')
+            ? 'https://dummyimage.com/200x400/BBB/202020.png&text=No+Poster+Available' 
+            : movie.poster}">
                             <div class="card-body">
                              <h5 class="card-title">${movie.title}</h5>`;
         movieHtml +=        `<p class="card-text">rating: ${movie.rating}</p>`;
@@ -136,17 +146,36 @@ $(document).ready(() => {
                         actors: "",
                         id: newId,
                     }
-                    const options = {
-                        method: 'POST',
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(movie)
-                    }
-                    if (DEBUG.verbose) console.log('Adding:', movie);
-                    return fetch(movieAPI, options)
-                        .then(response => response.json())
-                        .then(getMovies);
+                    addPoster(movie)
+                        .then(movie => {
+                            if (DEBUG.verbose) console.log(movie);
+                            const options = {
+                                method: 'POST',
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(movie)
+                            }
+                            if (DEBUG.verbose) console.log('Adding:', movie);
+                            return fetch(movieAPI, options)
+                                .then(response => response.json())
+                                .then(getMovies);
+                        })
+                        .catch(movie => {
+                            movie.poster = 'noimage';
+                            if (DEBUG.verbose) console.log(movie);
+                            const options = {
+                                method: 'POST',
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(movie)
+                            }
+                            if (DEBUG.verbose) console.log('Adding:', movie);
+                            return fetch(movieAPI, options)
+                                .then(response => response.json())
+                                .then(getMovies);
+                        });
                 } catch (error) {
                     console.error(error)
                 }
@@ -162,9 +191,6 @@ $(document).ready(() => {
         console.log($('#edit-form-modal').data('movie'))
         destroyElementContents(editForm);
 
-        /*
-
-         */
         // all styling and structure for the edit form is done here
         let formHtml = `
     <div class="modal-dialog">
@@ -239,21 +265,44 @@ $(document).ready(() => {
             // here we are retrieving it from a jQuery data method instead of taking user input
             id: editForm.data('movie').id,
         }
+
         // we are done with the edit form contents, destroy them
         destroyElementContents(editForm);
+        addPoster(newMovie)
+            .then(movie => {
+                if (DEBUG.verbose) console.log(movie);
+                const options = {
+                    method: 'PUT',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(movie)
+                }
+                fetch(`${movieAPI}/${movie.id}`, options)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (DEBUG.verbose) console.log(data)
+                        getMovies();
+                    });
+            })
+            .catch(movie => {
+                movie.poster = 'noimage';
+                console.log(movie);
+                const options = {
+                    method: 'PUT',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(movie)
+                }
+                fetch(`${movieAPI}/${movie.id}`, options)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (DEBUG.verbose) console.log(data)
+                        getMovies();
+                    });
+            });
 
-        // make the put request
-        const options = {
-            method: 'PUT',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newMovie)
-        }
-        fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
-            if (DEBUG.verbose) console.log(data)
-            getMovies();
-        });
     }
 
 
@@ -346,6 +395,8 @@ $(document).ready(() => {
             buildAddForm();
         });
 
+        $('#sort-select, #order-select').on('change', getMovies);
+
     }
 
     const filterMovieList = () => {
@@ -358,18 +409,20 @@ $(document).ready(() => {
     }
 
     const dynamicSort = (property) => {
-        var sortOrder = 1;
+        console.log(property)
+        let sortOrder = 1;
 
         if(property[0] === "-") {
             sortOrder = -1;
             property = property.substr(1);
         }
+        // console.log(a[property]);
 
-        return function (a,b) {
-            if(sortOrder == -1){
-                return b[property].localeCompare(a[property]);
+        return function (a, b) {
+            if(sortOrder === -1){
+                return b[property].join(' ').localeCompare(a[property]);
             }else{
-                return a[property].localeCompare(b[property]);
+                return a[property].join(' ').localeCompare(b[property]);
             }
         }
     }
@@ -377,7 +430,33 @@ $(document).ready(() => {
     const sortMovieProperties = () => {
         $('#sort-select').on('change', function () {
             // dynamicSort($(this).val())
+            getMovies();
         });
+    }
+
+    const addPoster = (movie) => {
+        return new Promise((resolve, reject) => {
+            if (movie.poster === 'undefined' || movie.poster === '') {
+                let query = movie.title.split('+');
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+                fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.results.length === 0) return reject(movie);
+                        let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
+                        movie.poster = url;
+                        console.log(data);
+                        return resolve(movie);
+                    });
+            } else {
+                return resolve(movie);
+            }
+        })
     }
 
     // all actual work done that is not simply function definitions should go in here to keep organized :)
@@ -385,5 +464,6 @@ $(document).ready(() => {
         // grab movies and do setup work as soon as page loads
         getMovies();
         filterMovieList();
+
     })();
 });
