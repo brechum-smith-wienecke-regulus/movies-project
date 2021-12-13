@@ -93,8 +93,9 @@ $(document).ready(() => {
                             <div class="card-body">
                              <h5 class="card-title">${movie.title}</h5>`;
         movieHtml +=        `<p class="card-text">rating: ${movie.rating}</p>`;
-        movieHtml +=        `<button class="movie-delete btn btn-danger">Delete</button>`;
+        movieHtml +=        `<p class="card-text">genre: ${movie.genre}</p>`;
         movieHtml +=        `<button type="button" class="movie-edit btn btn-primary" data-toggle="modal" data-target="#edit-form-modal">Edit</button>`
+        movieHtml +=        `<button class="movie-delete btn btn-danger">Delete</button>`;
         movieHtml +=    `</div>`
         const movieContainer = $(document.createElement('div'))
             .data('movie', movie)
@@ -105,7 +106,7 @@ $(document).ready(() => {
         return movieContainer;
     }
 
-    const addMovie = (rating, title) => {
+    const addMovie = (rating, title, genre) => {
         // we look up the latest status from the database regarding movies so we avoid id collision
         fetch(movieAPI, {
             method: 'GET',
@@ -135,7 +136,7 @@ $(document).ready(() => {
                         rating: rating,
                         director: "",
                         year: "",
-                        genre: "",
+                        genre: genre,
                         poster: "",
                         plot: "",
                         actors: "",
@@ -293,31 +294,6 @@ $(document).ready(() => {
             });
     }
 
-    /*
-            <!-- Button trigger modal -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-  Launch demo modal
-</button>
-
-<!-- Modal -->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editFormTitle"></h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save</button>
-      </div>
-    </div>
-  </div>
-     */
 
     const buildAddForm = () => {
         destroyElementContents($('#add-movie-modal'));
@@ -342,6 +318,8 @@ $(document).ready(() => {
                     <option value="4">4</option>
                     <option value="5">5</option>
                 </select>
+                <label for="add-genre">Genre</label>
+                <input id="add-genre" type="text" placeholder="">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-add">Close</button>
@@ -360,8 +338,11 @@ $(document).ready(() => {
             $('body').removeClass('modal-open');
             $('.modal-backdrop').remove();
             if (DEBUG.verbose) console.log('Submit Add event', e)
-            // pass the two input fields to our addMovie function
-            addMovie($('#add-rating').val(), $('#add-title').val());
+            // grab genres field and convert to array
+            let genres = $('#add-genre').val().split(',');
+            console.log(genres);
+            // pass the three input fields to our addMovie function
+            addMovie($('#add-rating').val(), $('#add-title').val(), genres);
             // destroy old form
             destroyElementContents($('#add-movie-modal'));
         });
@@ -386,7 +367,6 @@ $(document).ready(() => {
             e.preventDefault();
             if (DEBUG.verbose) console.log('Create Add event', e)
             buildAddForm();
-            // userAddMovieButton.hide();
         });
 
     }
