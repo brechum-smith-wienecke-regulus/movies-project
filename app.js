@@ -158,7 +158,7 @@ const submitEdit = (e) => {
         id: $('#edit-movie').data('movie').id,
     }
     // we are done with the form contents, destroy them
-    destroyElementContents();
+    destroyElementContents($('#edit-movie'));
     const options = {
         method: 'PUT',
         headers: {
