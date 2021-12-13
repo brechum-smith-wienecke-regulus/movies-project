@@ -26,7 +26,7 @@ $(document).ready(() => {
         // might as well switch the loading element back in while waiting for response
         $('#loading').show();
         // only loading element should be visible, all elements depending on response should be hidden
-        $('#create-add-form, #movie-display, #add-movie, #edit-movie').hide();
+        $('#create-add-form, #movie-display, #add-movie').hide();
         // clear out the old contents of movie-display while we prepare to build the new contents from response
         destroyElementContents(movieDisplay);
 
@@ -41,7 +41,7 @@ $(document).ready(() => {
             .then(movies => {
                 if (DEBUG.verbose) console.log(movies);
                 // now we can show our movie database data and controls
-                $('#create-add-form, #movie-display, #add-movie, #edit-movie').show()
+                $('#create-add-form, #movie-display, #add-movie').show()
                 // hide loading
                 $('#loading').hide();
                 // map each movie returned from db into a new array of html strings
@@ -54,16 +54,15 @@ $(document).ready(() => {
                     if (DEBUG.verbose) console.log('User Edit event')
                     // here we get the parent div of the clicked movie edit button, which
                     // contains a jQuery data value that has had the corresponding movie object stored
-                    editMovie($(this).parent().data('movie'));
-                    document.querySelector('#edit-movie').scrollIntoView();
+                    editMovie($(this).parent().parent().data('movie'));
                 });
 
                 // setup event listener for delete buttons
                 $('.movie-delete').on('click', function (e) {
                     e.preventDefault();
                     if (DEBUG.verbose) console.log('User Delete event');
-                    if (confirm(`Are you sure you want to delete ${$(this).parent().data('movie').title}?`)) {
-                        deleteMovie($(this).parent().data('movie').id)
+                    if (confirm(`Are you sure you want to delete ${$(this).parent().parent().data('movie').title}?`)) {
+                        deleteMovie($(this).parent().parent().data('movie').id)
                     }
                 });
 
@@ -94,14 +93,13 @@ $(document).ready(() => {
                             <div class="card-body">
                              <h5 class="card-title">${movie.title}</h5>`;
         movieHtml +=        `<p class="card-text">rating: ${movie.rating}</p>`;
-
-        movieHtml +=        `<button class="movie-delete btn btn-primary">Delete</button>`;
-        movieHtml +=        `<button class="movie-edit btn btn-danger">Edit</button>`;
+        movieHtml +=        `<button class="movie-delete btn btn-danger">Delete</button>`;
+        movieHtml +=        `<button type="button" class="movie-edit btn btn-primary" data-toggle="modal" data-target="#edit-form-modal">Edit</button>`
         movieHtml +=    `</div>`
         const movieContainer = $(document.createElement('div'))
             .data('movie', movie)
-            .addClass('movie-container card col-4 p-1')
-            .css('width', '15vw')
+            .addClass('movie-container card col-3 p-1')
+            .css('width', '23vw')
             .append(movieHtml);
 
         return movieContainer;
@@ -180,39 +178,87 @@ $(document).ready(() => {
         // selecting our form area for movie listing editing
         // using jquery data to preserve info about user movie selection
         // this data is retrieved when rebuilding the movie object before edit submission
-        const editForm = $('#edit-movie').data('movie', movie);
+        const editForm = $('#edit-form-modal').data('movie', movie);
         // destroy old form (if any) before preparing the new one
+        console.log($('#edit-form-modal').data('movie'))
         destroyElementContents(editForm);
 
+        /*
+        <!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+  Launch demo modal
+</button>
+
+<!-- Modal -->
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editFormTitle"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+         */
         // all styling and structure for the edit form is done here
         let formHtml = `
-        <label for="title">Title</label>
-        <input type="text" id="title" value="${movie.title}">
-        <label for="new-rating">Rating</label>
-        <input type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
-        <label for="director">Director</label>
-        <input type="text" id="director" value="${movie.director}">
-        <label for="year">Year</label>
-        <input type="text" id="year" value="${movie.year}">
-        <label for="genre">Genre</label>
-        <input type="text" id=genre value="${movie.genre}">
-        <label for="poster">Poster</label>
-        <input type="text" id="poster" value="${movie.poster}">
-        <label for="plot">Plot</label>
-        <textarea id="plot">${movie.plot}</textarea>
-        <label for="actors">Actors</label>
-        <input type="text" id="actors" value="${movie.actors}">
-        <br>
-        <button id="submit-edit">Submit</button>
-        <button id="reset-edit">Reset</button>`;
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editFormTitle">Editing ${movie.title}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="title">Title</label>
+                <input type="text" id="title" value="${movie.title}">
+                <label for="new-rating">Rating</label>
+                <input type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
+                <label for="director">Director</label>
+                <input type="text" id="director" value="${movie.director}">
+                <label for="year">Year</label>
+                <input type="text" id="year" value="${movie.year}">
+                <label for="genre">Genre</label>
+                <input type="text" id=genre value="${movie.genre}">
+                <label for="poster">Poster</label>
+                <input type="text" id="poster" value="${movie.poster}">
+                <label for="plot">Plot</label>
+                <textarea id="plot">${movie.plot}</textarea>
+                <label for="actors">Actors</label>
+                <input type="text" id="actors" value="${movie.actors}">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-edit">Close</button>
+                <button type="button" class="btn btn-primary" id="submit-edit">Save</button>
+            </div>
+        </div>
+    </div>`;
 
         editForm.append(formHtml);
 
-        $('#submit-edit').on('click', e => submitEdit(e))
+        $('#submit-edit').on('click', e => {
+            e.preventDefault();
+            $('#edit-form-modal').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+            submitEdit(e)
+        })
         // reset button destroys the form and refreshes the content
         $('#reset-edit').on('click', e => {
             e.preventDefault();
-            console.log('Reset edit form event');
+            $('#edit-form-modal').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+            if (DEBUG.verbose) console.log('Reset edit form event');
             destroyElementContents(editForm);
             getMovies();
         });
@@ -222,7 +268,7 @@ $(document).ready(() => {
         // if there was an event that called this function, prevent page refresh
         if (e) e.preventDefault();
         // editForm is the form presented to the user to allow changing movie contents
-        const editForm = $('#edit-movie');
+        const editForm = $('#edit-form-modal');
         let newMovie = {
             title: $("#title").val(),
             rating: $("#new-rating").val(),
