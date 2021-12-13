@@ -78,16 +78,7 @@ $(document).ready(() => {
     // build a single movie element for the page
     // takes a movie, returns a string made from that movie formatted in html
 
-    /*  <div class="card" style="width: 18rem;">
-            <img src="..." class="card-img-top" alt="...">
-            <div class="card-body">
-                <h5 class="card-title">Movie title</h5>
-                <p class="card-text">rating</p>
-                <a href="#" class="btn btn-primary">Edit</a>
-                <a href="#" class="btn btn-danger">Delete</a>
-            </div>
-        </div>
-     */
+
     const renderMovie = (movie) => {
         let movieHtml = `<img class="movie-poster" src="${movie.poster}">
                             <div class="card-body">
@@ -157,7 +148,6 @@ $(document).ready(() => {
                     console.error(error)
                 }
             });
-
     }
 
     const editMovie = (movie) => {
