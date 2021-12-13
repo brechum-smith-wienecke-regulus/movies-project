@@ -1,8 +1,8 @@
-//
+// this debug object has several flags that can be useful for debugging different parts of the app
 let DEBUG = {
+    // verbose: when true, many different important steps of the app will have details printed into the console
+    //          default - false
     verbose: true,
-    noPost: false,
-    noPut: false,
 }
 
 $(document).ready(() => {
@@ -49,7 +49,8 @@ $(document).ready(() => {
                 movieDisplay.append(movieList);
 
                 // setup event listener for edit buttons
-                $('.movie-edit').on('click', function () {
+                $('.movie-edit').on('click', function (e) {
+                    e.preventDefault();
                     if (DEBUG.verbose) console.log('User Edit event')
                     // here we get the parent div of the clicked movie edit button, which
                     // contains a jQuery data value that has had the corresponding movie object stored
@@ -58,7 +59,8 @@ $(document).ready(() => {
                 });
 
                 // setup event listener for delete buttons
-                $('.movie-delete').on('click', function () {
+                $('.movie-delete').on('click', function (e) {
+                    e.preventDefault();
                     if (DEBUG.verbose) console.log('User Delete event');
                     if (confirm(`Are you sure you want to delete ${$(this).parent().data('movie').title}?`)) {
                         deleteMovie($(this).parent().data('movie').id)
@@ -112,6 +114,7 @@ $(document).ready(() => {
                 // we really do not want to push objects to our database that have bad ids
                 // using try catch here to prevent submitting new films with unset IDs
                 try {
+                    // if newId is still null, we throw and exit the request
                     if (newId === null) throw 'ID assignment issue, cancelling post request';
                     const movie = {
                         title: title,
@@ -189,7 +192,14 @@ $(document).ready(() => {
 
         editForm.append(formHtml);
 
-        $('#submit-edit').on('click', (e) => submitEdit(e))
+        $('#submit-edit').on('click', e => submitEdit(e))
+        // reset button destroys the form and refreshes the content
+        $('#reset-edit').on('click', e => {
+            e.preventDefault();
+            console.log('Reset edit form event');
+            destroyElementContents(editForm);
+            getMovies();
+        });
     }
 
     const submitEdit = (e) => {
@@ -275,6 +285,7 @@ $(document).ready(() => {
     }
 
     const enableUserFormInput = () => {
+        destroyElementContents($('#add-movie'));
         // userAddMovieButton toggles display of user's add movie form
         const userAddMovieButton = $('#create-add-form');
         userAddMovieButton.show();
@@ -291,6 +302,5 @@ $(document).ready(() => {
     (() => {
         // grab movies and do setup work as soon as page loads
         getMovies();
-
     })();
 });
