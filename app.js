@@ -103,7 +103,7 @@ $(document).ready(() => {
                 <p class="card-text">rating: ${movie.rating}</p>
                 <p class="card-text">genre: ${movie.genre}</p>
             </div>
-            <div class="card-footer">
+            <div class="card-footer justify-content-end">
                 <button type="button" class="movie-edit btn btn-primary mr-3" data-toggle="modal" data-target="#edit-form-modal">Edit</button>
                 <button class="movie-delete btn btn-danger">Delete</button>
             </div>`
@@ -192,9 +192,13 @@ $(document).ready(() => {
 
     const showMovieControls = () => {
         $('.movie-container').hover(function () {
-            $(this).children('.card-footer').css('display', 'block');
+            $(this).children('.card-footer')
+                .css('visibility', 'visible')
+                .css('position', 'relative')
         }, function () {
-            $(this).children('.card-footer').css('display', 'none');
+            $(this).children('.card-footer')
+                .css('visibility', 'hidden')
+                .css('position', 'absolute')
         });
     }
 
@@ -438,14 +442,14 @@ $(document).ready(() => {
         }
 
         return function (a, b) {
-            if (property === 'genre') {
-                a = a.join(' ');
-                b = b.join(' ');
-            }
+            // if (property === 'genre') {
+            //     a = a.join(' ');
+            //     b = b.join(' ');
+            // }
             if(sortOrder === -1){
-                return b[property].localeCompare(a[property]);
+                return b[property].toString().localeCompare(a[property]);
             }else{
-                return a[property].localeCompare(b[property]);
+                return a[property].toString().localeCompare(b[property]);
             }
         }
     }
