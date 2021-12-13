@@ -2,7 +2,7 @@
 let DEBUG = {
     // verbose: when true, many different important steps of the app will have details printed into the console
     //          default - false
-    verbose: false,
+    verbose: true,
 }
 
 $(document).ready(() => {
@@ -91,19 +91,22 @@ $(document).ready(() => {
 
 
     const renderMovie = (movie) => {
-        let movieHtml = `<img class="movie-poster mr-2 pr-2" src="${(movie.poster === 'noimage')
+        let movieHtml =
+            `<img class="movie-poster mr-2 pr-2 card-img-top" src="${(movie.poster === 'noimage')
             ? 'https://dummyimage.com/200x400/BBB/202020.png&text=No+Poster+Available' 
             : movie.poster}">
-                            <div class="card-body">
-                             <h5 class="card-title">${movie.title}</h5>`;
-        movieHtml +=        `<p class="card-text">rating: ${movie.rating}</p>`;
-        movieHtml +=        `<p class="card-text">genre: ${movie.genre}</p>`;
-        movieHtml +=        `<button type="button" class="movie-edit btn btn-primary mr-3" data-toggle="modal" data-target="#edit-form-modal">Edit</button>`
-        movieHtml +=        `<button class="movie-delete btn btn-danger">Delete</button>`;
-        movieHtml +=    `</div>`
+            <div class="card-body">
+                <h5 class="card-title">${movie.title}</h5>
+                <p class="card-text">rating: ${movie.rating}</p>
+                <p class="card-text">genre: ${movie.genre}</p>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="movie-edit btn btn-primary mr-3" data-toggle="modal" data-target="#edit-form-modal">Edit</button>
+                <button class="movie-delete btn btn-danger">Delete</button>
+            </div>`
         const movieContainer = $(document.createElement('div'))
             .data('movie', movie)
-            .addClass('movie-container card col-3 p-1')
+            .addClass('movie-container col card p-1')
             .css('width', '23vw')
             .append(movieHtml);
 
@@ -129,6 +132,8 @@ $(document).ready(() => {
                         newId = i + 1;
                         break;
                     }
+                    if (i + 1 === existingIds.length) newId = existingIds.length + 1;
+                    console.log('checking id', i+1);
                 }
                 // we really do not want to push objects to our database that have bad ids
                 // using try catch here to prevent submitting new films with unset IDs
@@ -201,23 +206,25 @@ $(document).ready(() => {
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <label for="title">Title</label>
-                <input type="text" id="title" value="${movie.title}">
-                <label for="new-rating">Rating</label>
-                <input type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
-                <label for="director">Director</label>
-                <input type="text" id="director" value="${movie.director}">
-                <label for="year">Year</label>
-                <input type="text" id="year" value="${movie.year}">
-                <label for="genre">Genre</label>
-                <input type="text" id=genre value="${movie.genre}">
-                <label for="poster">Poster</label>
-                <input type="text" id="poster" value="${movie.poster}">
-                <label for="plot">Plot</label>
-                <textarea id="plot">${movie.plot}</textarea>
-                <label for="actors">Actors</label>
-                <input type="text" id="actors" value="${movie.actors}">
+                        <div class="modal-body d-flex">
+                <div class="flex-grow-1">
+                    <label class="mt-2" for="title">Title</label>
+                    <input class="form-control" type="text" id="title" value="${movie.title}">
+                    <label class="mt-2" for="new-rating">Rating</label>
+                    <input class="form-control" type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
+                    <label class="mt-2" for="director">Director</label>
+                    <input class="form-control" type="text" id="director" value="${movie.director}">
+                    <label class="mt-2" for="year">Year</label>
+                    <input class="form-control" type="text" id="year" value="${movie.year}">
+                    <label class="mt-2" for="genre">Genre</label>
+                    <input class="form-control" type="text" id=genre value="${movie.genre}">
+                    <label class="mt-2" for="poster">Poster</label>
+                    <input class="form-control" type="text" id="poster" value="${movie.poster}">
+                    <label class="mt-2" for="plot">Plot</label>
+                    <textarea class="form-control" id="plot" rows="4">${movie.plot}</textarea>
+                    <label class="mt-2" for="actors">Actors</label>
+                    <input class="form-control" type="text" id="actors" value="${movie.actors}">
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-edit">Close</button>
@@ -334,19 +341,21 @@ $(document).ready(() => {
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" id="add-movie">
-                <label for="add-title">Title</label>
-                <input id="add-title" type="text" placeholder="">
-                <label for="rating">Rating</label>
-                <select id="add-rating" name="rating">
-                    <option value="1"> 1</option>
-                    <option value="2">2</option>
-                    <option selected value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                </select>
-                <label for="add-genre">Genre</label>
-                <input id="add-genre" type="text" placeholder="">
+            <div class="modal-body d-flex" id="add-movie">
+                <div class="flex-grow-1">
+                    <label for="add-title">Title</label>
+                    <input class="form-control" id="add-title" type="text" placeholder="">
+                    <label for="rating">Rating</label>
+                    <select class="form-control" id="add-rating" name="rating">
+                        <option value="1"> 1</option>
+                        <option value="2">2</option>
+                        <option selected value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                    <label for="add-genre">Genre</label>
+                    <input class="form-control" id="add-genre" type="text" placeholder="">
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-add">Close</button>

@@ -2,7 +2,11 @@
 
 /* at 4 cols wide img should be roughly 350px tall */
 
-    width: 24vw;
+    width: 100%;
     height: 45vh;
     object-fit: cover;
+}
+
+.movie-container {
+    min-width: 20vw;
 }
