@@ -78,14 +78,30 @@ $(document).ready(() => {
 
     // build a single movie element for the page
     // takes a movie, returns a string made from that movie formatted in html
+
+    /*  <div class="card" style="width: 18rem;">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Movie title</h5>
+                <p class="card-text">rating</p>
+                <a href="#" class="btn btn-primary">Edit</a>
+                <a href="#" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+     */
     const renderMovie = (movie) => {
-        let movieHtml = `<h1>${movie.title}</h1>`;
-        movieHtml += `<p>rating: ${movie.rating}</p>`;
-        movieHtml += `<button class="movie-delete">Delete</button>`;
-        movieHtml += `<button class="movie-edit">Edit</button>`;
+        let movieHtml = `<img class="movie-poster" src="${movie.poster}">
+                            <div class="card-body">
+                             <h5 class="card-title">${movie.title}</h5>`;
+        movieHtml +=        `<p class="card-text">rating: ${movie.rating}</p>`;
+
+        movieHtml +=        `<button class="movie-delete btn btn-primary">Delete</button>`;
+        movieHtml +=        `<button class="movie-edit btn btn-danger">Edit</button>`;
+        movieHtml +=    `</div>`
         const movieContainer = $(document.createElement('div'))
             .data('movie', movie)
-            .addClass('movie-container')
+            .addClass('movie-container card col-4 p-1')
+            .css('width', '15vw')
             .append(movieHtml);
 
         return movieContainer;
