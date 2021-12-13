@@ -83,7 +83,9 @@ $(document).ready(() => {
 
 
     const renderMovie = (movie) => {
-        let movieHtml = `<img class="movie-poster" src="${movie.poster}">
+        let movieHtml = `<img class="movie-poster" src="${(movie.poster === 'noimage')
+            ? 'https://dummyimage.com/400x400/BBB/202020.png&text=No+Poster+Available' 
+            : movie.poster}">
                             <div class="card-body">
                              <h5 class="card-title">${movie.title}</h5>`;
         movieHtml +=        `<p class="card-text">rating: ${movie.rating}</p>`;
@@ -181,9 +183,6 @@ $(document).ready(() => {
         console.log($('#edit-form-modal').data('movie'))
         destroyElementContents(editForm);
 
-        /*
-
-         */
         // all styling and structure for the edit form is done here
         let formHtml = `
     <div class="modal-dialog">
@@ -261,41 +260,9 @@ $(document).ready(() => {
 
         // we are done with the edit form contents, destroy them
         destroyElementContents(editForm);
-
-        // addPoster(newMovie).then(movie => {
-        // if (newMovie.poster === 'undefined' || newMovie.poster === '') {
-        //
-        //     let query = newMovie.title.split('+');
-        //     const options = {
-        //         method: 'GET',
-        //         headers: {
-        //             "Content-Type": "application/json",
-        //         },
-        //     }
-        //     fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
-        //             newMovie.poster = url;
-        //             return newMovie;
-        //         })
-        //         .then(newMovie => {
-        //             const options = {
-        //                 method: 'PUT',
-        //                 headers: {
-        //                     "Content-Type": "application/json",
-        //                 },
-        //                 body: JSON.stringify(newMovie)
-        //             }
-        //             fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
-        //                 if (DEBUG.verbose) console.log(data)
-        //                 getMovies();
-        //             });
-        //         });
-        // } else {
         addPoster(newMovie)
             .then(movie => {
-                console.log(movie);
+                if (DEBUG.verbose) console.log(movie);
                 const options = {
                     method: 'PUT',
                     headers: {
