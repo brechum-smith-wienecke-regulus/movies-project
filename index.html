@@ -14,11 +14,12 @@
   <h4>Loading...</h4>
 </div>
 <div id="movie-display" class="row m-n1"></div>
-<button id="create-add-form">Add a movie</button>
-<div id="add-movie">
+
+<button id="create-add-form" class="btn btn-block btn-primary my-2" data-toggle="modal" data-target="#add-movie-modal">Add a movie</button>
+<div id="add-movie-modal" class="modal fade" tabindex="-1" aria-labelledby="addMovieModal" aria-hidden="true">
 </div>
 
-<div class="modal fade" id="edit-form-modal" tabindex="-1" aria-labelledby="editFormModal" aria-hidden="true">
+<div class="modal fade" id="edit-form-modal" tabindex="-2" aria-labelledby="editFormModal" aria-hidden="true">
 </div>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>

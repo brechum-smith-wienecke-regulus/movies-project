@@ -26,7 +26,7 @@ $(document).ready(() => {
         // might as well switch the loading element back in while waiting for response
         $('#loading').show();
         // only loading element should be visible, all elements depending on response should be hidden
-        $('#create-add-form, #movie-display, #add-movie').hide();
+        $('#create-add-form, #movie-display').hide();
         // clear out the old contents of movie-display while we prepare to build the new contents from response
         destroyElementContents(movieDisplay);
 
@@ -41,7 +41,7 @@ $(document).ready(() => {
             .then(movies => {
                 if (DEBUG.verbose) console.log(movies);
                 // now we can show our movie database data and controls
-                $('#create-add-form, #movie-display, #add-movie').show()
+                $('#create-add-form, #movie-display').show()
                 // hide loading
                 $('#loading').hide();
                 // map each movie returned from db into a new array of html strings
@@ -184,29 +184,7 @@ $(document).ready(() => {
         destroyElementContents(editForm);
 
         /*
-        <!-- Button trigger modal -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-  Launch demo modal
-</button>
 
-<!-- Modal -->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editFormTitle"></h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save</button>
-      </div>
-    </div>
-  </div>
          */
         // all styling and structure for the edit form is done here
         let formHtml = `
@@ -315,39 +293,90 @@ $(document).ready(() => {
             });
     }
 
+    /*
+            <!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+  Launch demo modal
+</button>
+
+<!-- Modal -->
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editFormTitle"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+     */
+
     const buildAddForm = () => {
         // build our form to take user input for adding movies here
-        let addForm =
-            `<form id="add-movie">
-            <label for="add-title">Title</label>
-            <input id="add-title" type="text" placeholder="">
-            <label for="rating">Rating</label>
-            <select id="add-rating" name="rating">
-                <option value="1"> 1</option>
-                <option value="2">2</option>
-                <option selected value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-          </select>
-          <button id="submit-add">Submit</button>
-        </form>`;
+        let addForm = `
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFormTitle">Add a Movie</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="add-movie">
+                <label for="add-title">Title</label>
+                <input id="add-title" type="text" placeholder="">
+                <label for="rating">Rating</label>
+                <select id="add-rating" name="rating">
+                    <option value="1"> 1</option>
+                    <option value="2">2</option>
+                    <option selected value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-add">Close</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit-add">Save</button>
+            </div>
+        </div>
+    </div>`;
 
         // display form for users
-        $('#add-movie').append(addForm);
+        $('#add-movie-modal').append(addForm);
 
         // setup click event
         $('#submit-add').on('click', (e) => {
             e.preventDefault();
+            $('#add-form-modal').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
             if (DEBUG.verbose) console.log('Submit Add event', e)
             // pass the two input fields to our addMovie function
             addMovie($('#add-rating').val(), $('#add-title').val());
             // destroy old form
-            destroyElementContents($('#add-movie'));
+            destroyElementContents($('#add-movie-modal'));
+        });
+        $('#reset-add').on('click', e => {
+            e.preventDefault();
+            $('#add-form-modal').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+            if (DEBUG.verbose) console.log('Reset edit form event');
+            destroyElementContents($('#add-movie-modal'));
+            getMovies();
         });
     }
 
     const enableUserFormInput = () => {
-        destroyElementContents($('#add-movie'));
+        destroyElementContents($('#add-movie-modal'));
         // userAddMovieButton toggles display of user's add movie form
         const userAddMovieButton = $('#create-add-form');
         userAddMovieButton.show();
@@ -355,7 +384,7 @@ $(document).ready(() => {
             e.preventDefault();
             if (DEBUG.verbose) console.log('Create Add event', e)
             buildAddForm();
-            userAddMovieButton.hide();
+            // userAddMovieButton.hide();
         });
 
     }
