@@ -47,7 +47,7 @@ $(document).ready(() => {
                 // map each movie returned from db into a new array of html strings
                 const movieList = movies.map(movie => renderMovie(movie));
                 // we can change the order here
-
+                // movieList.
                 // draw movies on screen
                 movieDisplay.append(movieList);
 
@@ -239,21 +239,53 @@ $(document).ready(() => {
             // here we are retrieving it from a jQuery data method instead of taking user input
             id: editForm.data('movie').id,
         }
+
         // we are done with the edit form contents, destroy them
         destroyElementContents(editForm);
 
-        // make the put request
-        const options = {
-            method: 'PUT',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newMovie)
+        // addPoster(newMovie).then(movie => {
+        if (newMovie.poster === 'undefined' || newMovie.poster === '') {
+
+            let query = newMovie.title.split('+');
+            const options = {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+            fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
+                .then(response => response.json())
+                .then(data => {
+                    let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
+                    newMovie.poster = url;
+                    return newMovie;
+                })
+                .then(newMovie => {
+                    const options = {
+                        method: 'PUT',
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(newMovie)
+                    }
+                    fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
+                        if (DEBUG.verbose) console.log(data)
+                        getMovies();
+                    });
+                });
+        } else {
+            const options = {
+                method: 'PUT',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newMovie)
+            }
+            fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
+                if (DEBUG.verbose) console.log(data)
+                getMovies();
+            });
         }
-        fetch(`${movieAPI}/${newMovie.id}`, options).then(response => response.json()).then(data => {
-            if (DEBUG.verbose) console.log(data)
-            getMovies();
-        });
     }
 
 
@@ -377,7 +409,30 @@ $(document).ready(() => {
     const sortMovieProperties = () => {
         $('#sort-select').on('change', function () {
             // dynamicSort($(this).val())
+            getMovies();
         });
+    }
+
+    const addPoster = (movie) => {
+        if (movie.poster === 'undefined' || movie.poster === '') {
+
+        let query = movie.title.split('+');
+        const options = {
+            method: 'GET',
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+        fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
+            .then(response => response.json())
+            .then(data => {
+                let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
+                movie.poster = url;
+                return Promise.resolve(movie);
+            });
+        } else {
+            return Promise.resolve(movie);
+        }
     }
 
     // all actual work done that is not simply function definitions should go in here to keep organized :)
@@ -385,5 +440,20 @@ $(document).ready(() => {
         // grab movies and do setup work as soon as page loads
         getMovies();
         filterMovieList();
+
+
+        // fetch(`https://api.themoviedb.org/3/movie/550?api_key=${TMDB_KEY}&`, options)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //     console.log(data);
+        // });
+
+
+        // fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=Jack+Reacher`, options)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         console.log(data.results[0].poster_path);
+        //     });
+        // {api_key}
     })();
 });
