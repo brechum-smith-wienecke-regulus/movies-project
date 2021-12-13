@@ -46,6 +46,9 @@ $(document).ready(() => {
                 $('#loading').hide();
                 // map each movie returned from db into a new array of html strings
                 const movieList = movies.map(movie => renderMovie(movie));
+                // we can change the order here
+
+                // draw movies on screen
                 movieDisplay.append(movieList);
 
                 // setup event listener for edit buttons
@@ -345,9 +348,19 @@ $(document).ready(() => {
 
     }
 
+    const filterMovieList = () => {
+       $("#movie-filter").on("keyup", function() {
+            let value = $(this).val().toLowerCase();
+            $("#movie-display>*").filter(function() {
+              $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+          });
+    }
+
     // all actual work done that is not simply function definitions should go in here to keep organized :)
     (() => {
         // grab movies and do setup work as soon as page loads
         getMovies();
+        filterMovieList();
     })();
 });
