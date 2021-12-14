@@ -1,14 +1,4 @@
-
 "use strict";
-
-// this debug object has several flags that can be useful for debugging different parts of the app
-
-let DEBUG = {
-    // verbose: when true, many different important steps of the app will have details printed into the console
-    //          default - false
-    verbose: true,
-}
-
 $(document).ready(() => {
     // our movie database url
     const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies/"
@@ -22,14 +12,7 @@ $(document).ready(() => {
     // loading is a little div that we show while waiting for a get request to our database
     const loading = $('#loading');
 
-    // this function destroys all children of an element
-    const destroyElementContents = (element) => {
-        while (element.get(0).firstChild) {
-            // using .get(0) here unwraps the element out of jQuery and back into vanilla JS
-            element.get(0).removeChild(element.get(0).lastChild);
-        }
-        return element;
-    }
+    /** MAIN CONTENT AREA **/
 
     // getMovies dumps the current contents of movieDisplay, fetches from our database, sorts and redraws the contents,
     // and sets up the first layer of event listeners
@@ -71,6 +54,8 @@ $(document).ready(() => {
         enableUserFormInput();
     }
 
+    /** MAIN CONTENT AREA DOM CONSTRUCTION UTILITIES **/
+
     // build a single movie element for the page
     // takes a movie object, returns a string made from that movie formatted into html
     const renderMovie = (movie) => {
@@ -111,40 +96,20 @@ $(document).ready(() => {
             .data('movie', movie)
             .addClass('movie-container movie-details-container col card')
             .append(movieDetailHtml);
-
     }
 
-    const addMovie = async (rating, title, genre) => {
-        // we look up the latest status from the database regarding movies so we avoid id collision
-        const movies = await sendDatabaseRequest('GET');
-        // get an array of all existing ids in database
-        const existingIds = movies.map(movie => movie.id);
-        // now we work through the existing ids looking for the first available unused number for the new id that isn't 0
-        let newId = null;
-        // iterate from 0 to length of existing IDs
-        for (let i = 0; i < existingIds.length; i++) {
-            // if existing IDs do not include the current value of i + 1 (keeping offset from 0)...
-            if (!existingIds.includes(i + 1)) {
-                // ...i + 1 is our new ID, exit early
-                newId = i + 1;
-                break;
-            }
-            // if we've checked all values between 1 and the length of the array, new ID will be 1 more
-            // than the last existing id
-            if (i + 1 === existingIds.length) newId = existingIds.length + 1;
+    // this utility function destroys all children of the jquery selector provided as the argument
+    const destroyElementContents = (element) => {
+        while (element.get(0).firstChild) {
+            // using .get(0) here unwraps the element out of jQuery and back into vanilla JS
+            element.get(0).removeChild(element.get(0).lastChild);
         }
-        // we can go through with the request so long as the id assignment was successful
-        if (newId !== null) {
-            // blast off our new movie's provided details for property inflation by omdb
-            const movie = await addMovieDetails({title: title, rating: rating, id: newId});
-            // add the completed film to our database and get it all in our browser
-            sendDatabaseRequest('POST', movie.id, movie)
-                .then(getMovies);
-        } else {
-            console.error('Post request aborted, id assignment error.');
-        }
+        return element;
     }
 
+    /** MAIN CONTENT AREA EVENT HANDLERS **/
+
+    // sets up fancy little interactions with movie card elements
     const showMovieControls = () => {
         // this is kind of ridiculous
         $('.movie-container').hover(function () {
@@ -192,33 +157,141 @@ $(document).ready(() => {
         });
     }
 
+    // set up event listeners for the delete/edit buttons in the movie cards
     const movieEditControlsListeners = () => {
         // setup event listener for edit buttons
         $('.movie-edit').on('click', function (e) {
             e.preventDefault();
-            if (DEBUG.verbose) console.log('User Edit event')
             // here we get the parent div of the clicked movie edit button, which
             // contains a jQuery data value that has had the corresponding movie object stored
-            editMovie($(this).parent().parent().data('movie'));
+            buildEditForm($(this).parent().parent().data('movie'));
         });
 
         // setup event listener for delete buttons
         $('.movie-delete').on('click', function (e) {
             e.preventDefault();
-            if (DEBUG.verbose) console.log('User Delete event');
             if (confirm(`Are you sure you want to delete ${$(this).parent().parent().data('movie').title}?`)) {
                 deleteMovie($(this).parent().parent().data('movie').id)
             }
         });
     }
 
-    const editMovie = (movie) => {
+    // setup event listeners for filtering/sorting displayed movies
+    const filterMovieList = () => {
+        // movie filter takes text input from user and filters movies that match
+        $("#movie-filter").on("keyup", function() {
+            let value = $(this).val().toLowerCase();
+            $("#movie-display>*").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+
+        // these selects re-order the layout of movies
+        $('#sort-select, #order-select').on('change', getMovies);
+    }
+
+    // utility function for sorting an array of our movie objects
+    const dynamicSort = (property) => {
+        let sortOrder = 1;
+
+        // prepending arg with '-' reverses the sorting
+        if(property[0] === "-") {
+            sortOrder = -1;
+            property = property.substr(1);
+        }
+
+        return function (a, b) {
+            if(sortOrder === -1){
+                return b[property].toString().localeCompare(a[property]);
+            }else{
+                return a[property].toString().localeCompare(b[property]);
+            }
+        }
+    }
+
+    // clears and readies a button to allow user to open a form for adding a new movie
+    const enableUserFormInput = () => {
+        destroyElementContents($('#add-movie-modal'));
+
+        // userAddMovieButton toggles display of user's add movie form
+        userAddMovieButton.show();
+        userAddMovieButton.on('click', (e) => {
+            e.preventDefault();
+            buildAddForm();
+        });
+    }
+
+    /** MODAL ADD/EDIT FORM ELEMENTS **/
+
+    // build a fresh modal form for adding a new movie
+    const buildAddForm = () => {
+        const addModal = $('#add-movie-modal');
+        destroyElementContents(addModal);
+        // build our form to take user input for adding movies here
+        let addForm = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFormTitle">Add a Movie</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body d-flex" id="add-movie">
+                    <div class="flex-grow-1">
+                        <label for="add-title">Title</label>
+                        <input class="form-control" id="add-title" type="text" placeholder="">
+                        <label for="rating">Rating</label>
+                        <select class="form-control" id="add-rating" name="rating">
+                            <option value="1"> 1</option>
+                            <option value="2">2</option>
+                            <option selected value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        <label for="add-genre">Genre</label>
+                        <input class="form-control" id="add-genre" type="text" placeholder="">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-add">Close</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit-add">Save</button>
+                </div>
+            </div>
+        </div>`;
+        // display form for users
+        addModal.append(addForm);
+
+        // setup event listeners
+        $('#submit-add').on('click', (e) => {
+            e.preventDefault();
+            $('#add-form-modal').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+            // grab genres field and convert to array
+            let genres = $('#add-genre').val();
+            // pass the three input fields to our addMovie function
+            addMovie($('#add-rating').val(), $('#add-title').val(), genres);
+            // destroy old form
+            destroyElementContents($('#add-movie-modal'));
+        });
+        $('#reset-add').on('click', e => {
+            e.preventDefault();
+            $('#add-form-modal').modal('hide');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+            destroyElementContents($('#add-movie-modal'));
+            getMovies();
+        });
+    }
+
+    // create a fresh modal form for editing an existing movie
+    const buildEditForm = (movie) => {
         // selecting our form area for movie listing editing
         // using jquery data to preserve info about user movie selection
         // this data is retrieved when rebuilding the movie object before edit submission
         const editForm = $('#edit-form-modal').data('movie', movie);
         // destroy old form (if any) before preparing the new one
-        console.log($('#edit-form-modal').data('movie'))
         destroyElementContents(editForm);
 
         // all styling and structure for the edit form is done here
@@ -257,15 +330,15 @@ $(document).ready(() => {
                 </div>
             </div>
         </div>`;
-
         editForm.append(formHtml);
 
+        // setup event listeners
         $('#submit-edit').on('click', e => {
             e.preventDefault();
             $('#edit-form-modal').modal('hide');
             $('body').removeClass('modal-open');
             $('.modal-backdrop').remove();
-            submitEdit(e)
+            editMovie(submitEditForm(e))
         })
         // reset button destroys the form and refreshes the content
         $('#reset-edit').on('click', e => {
@@ -273,13 +346,13 @@ $(document).ready(() => {
             $('#edit-form-modal').modal('hide');
             $('body').removeClass('modal-open');
             $('.modal-backdrop').remove();
-            if (DEBUG.verbose) console.log('Reset edit form event');
             destroyElementContents(editForm);
             getMovies();
         });
     }
 
-    const submitEdit = (e) => {
+    // read in changed inputs from edit modal form and prepare a new movie object to put in database
+    const submitEditForm = (e) => {
         // if there was an event that called this function, prevent page refresh
         if (e) e.preventDefault();
         // editForm is the form presented to the user to allow changing movie contents
@@ -289,37 +362,89 @@ $(document).ready(() => {
             rating: $("#new-rating").val(),
             director: $("#director").val(),
             year: $("#year").val(),
-            genre: $("#genre").val().split(','),
+            genre: $("#genre").val(),
             poster: $("#poster").val(),
             plot: $("#plot").val(),
-            actors: $("#actors").val().split(','),
+            actors: $("#actors").val(),
             // the id is here an edge case. users are not able to see/manipulate these ids directly
             // here we are retrieving it from a jQuery data method instead of taking user input
             id: editForm.data('movie').id,
         }
-
         // we are done with the edit form contents, destroy them
         destroyElementContents(editForm);
+        return newMovie;
+    }
+
+    /** ADD/EDIT/DELETE FROM DATABASE UTILITIES **/
+
+    // assemble a new movie & id from modal form, pull more info from omdb, then post it to our database
+    const addMovie = async (rating, title, genre) => {
+        // we look up the latest status from the database regarding movies so we avoid id collision
+        const movies = await sendDatabaseRequest('GET');
+        // get an array of all existing ids in database
+        const existingIds = movies.map(movie => movie.id);
+        // now we work through the existing ids looking for the first available unused number for the new id that isn't 0
+        let newId = null;
+        // iterate from 0 to length of existing IDs
+        for (let i = 0; i < existingIds.length; i++) {
+            // if existing IDs do not include the current value of i + 1 (keeping offset from 0)...
+            if (!existingIds.includes(i + 1)) {
+                // ...i + 1 is our new ID, exit early
+                newId = i + 1;
+                break;
+            }
+            // if we've checked all values between 1 and the length of the array, new ID will be 1 more
+            // than the last existing id
+            if (i + 1 === existingIds.length) newId = existingIds.length + 1;
+        }
+        // we can go through with the request so long as the id assignment was successful
+        if (newId !== null) {
+            // blast off our new movie's provided details for property inflation by omdb
+            const movie = await addMovieDetails({title: title, rating: rating, genre: genre, id: newId});
+            // add the completed film to our database and get it all in our browser
+            sendDatabaseRequest('POST', movie.id, movie)
+                .then(getMovies)
+                .catch(movie => {
+                    console.error('Some issue with adding new movie', movie);
+                    getMovies();
+                })
+        } else {
+            console.error('Post request aborted, id assignment error.');
+        }
+    }
+
+    // grab extra details before put movie back into database
+    const editMovie = (movie) => {
         // fill out any missing details from omdb
-        addMovieDetails(newMovie)
+        addMovieDetails(movie)
             .then(movie => {
                 sendDatabaseRequest('PUT', movie.id, movie)
                     .then(getMovies);
             })
             .catch(movie => {
-                // general catch-all for issues with editing. picture will break
+                // general catch-all for issues with editing images
                 console.error('Some issue with movie editing.', movie);
                 sendDatabaseRequest('PUT', movie.id, movie)
                     .then(getMovies);
             });
     }
 
+    // remove a movie selected by its id from our database
     const deleteMovie = (id) => {
         sendDatabaseRequest('DELETE', id)
-            .then(getMovies);
+            .then(getMovies)
+            .catch(response => console.error('Error with sending request to our database', response));
     }
 
+    /** API REQUEST UTILITIES **/
+
+    // multi-use utility function for making any and all kinds of requests to our database
     const sendDatabaseRequest = async (method, id, movie) => {
+        // params to send differ by method but method is REQUIRED
+        // GET: only need method for full database pull, otherwise add an id for single item lookup
+        // DELETE: requires id
+        // PUT: requires id and movie
+        // POST: requires id and movie
         const options = {
             method: method,
             headers: {
@@ -337,113 +462,11 @@ $(document).ready(() => {
                 url += id;
         }
         const response = await fetch(url, options);
+        // returns a fully de-json'ed promise to its caller
         return await response.json();
     }
 
-    const buildAddForm = () => {
-        const addModal = $('#add-movie-modal');
-        destroyElementContents(addModal);
-        // build our form to take user input for adding movies here
-        let addForm = `
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addFormTitle">Add a Movie</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body d-flex" id="add-movie">
-                    <div class="flex-grow-1">
-                        <label for="add-title">Title</label>
-                        <input class="form-control" id="add-title" type="text" placeholder="">
-                        <label for="rating">Rating</label>
-                        <select class="form-control" id="add-rating" name="rating">
-                            <option value="1"> 1</option>
-                            <option value="2">2</option>
-                            <option selected value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                        </select>
-                        <label for="add-genre">Genre</label>
-                        <input class="form-control" id="add-genre" type="text" placeholder="">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-add">Close</button>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit-add">Save</button>
-                </div>
-            </div>
-        </div>`;
-
-        // display form for users
-        addModal.append(addForm);
-
-        // setup click event
-        $('#submit-add').on('click', (e) => {
-            e.preventDefault();
-            $('#add-form-modal').modal('hide');
-            $('body').removeClass('modal-open');
-            $('.modal-backdrop').remove();
-            if (DEBUG.verbose) console.log('Submit Add event', e)
-            // grab genres field and convert to array
-            let genres = $('#add-genre').val().split(',');
-            // pass the three input fields to our addMovie function
-            addMovie($('#add-rating').val(), $('#add-title').val(), genres);
-            // destroy old form
-            destroyElementContents($('#add-movie-modal'));
-        });
-        $('#reset-add').on('click', e => {
-            e.preventDefault();
-            $('#add-form-modal').modal('hide');
-            $('body').removeClass('modal-open');
-            $('.modal-backdrop').remove();
-            if (DEBUG.verbose) console.log('Reset edit form event');
-            destroyElementContents($('#add-movie-modal'));
-            getMovies();
-        });
-    }
-
-    const enableUserFormInput = () => {
-        destroyElementContents($('#add-movie-modal'));
-
-        // userAddMovieButton toggles display of user's add movie form
-        userAddMovieButton.show();
-        userAddMovieButton.on('click', (e) => {
-            e.preventDefault();
-            buildAddForm();
-        });
-    }
-
-    const filterMovieList = () => {
-       $("#movie-filter").on("keyup", function() {
-            let value = $(this).val().toLowerCase();
-            $("#movie-display>*").filter(function() {
-              $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
-          });
-
-        $('#sort-select, #order-select').on('change', getMovies);
-    }
-
-    const dynamicSort = (property) => {
-        if(DEBUG.verbose) console.log(property)
-        let sortOrder = 1;
-
-        if(property[0] === "-") {
-            sortOrder = -1;
-            property = property.substr(1);
-        }
-
-        return function (a, b) {
-            if(sortOrder === -1){
-                return b[property].toString().localeCompare(a[property]);
-            }else{
-                return a[property].toString().localeCompare(b[property]);
-            }
-        }
-    }
-
+    // async utility function that fill out movie fields with data from an external API
     const addMovieDetails = async (movie) => {
         return await fetchMovie(movie.title)
             .then(data => {
@@ -458,6 +481,7 @@ $(document).ready(() => {
             });
     }
 
+    // little utility function that sends a request to omdbapi for its data re: the movie title argument
     const fetchMovie = async (title) => {
         const response = await fetch(`http://www.omdbapi.com/?t=${title}&apikey=${OMDB_KEY}`);
         if (!response.ok) throw new Error (`${response.status}`)
@@ -468,5 +492,6 @@ $(document).ready(() => {
     (() => {
         // grab movies and do setup work as soon as page loads
         getMovies();
+        // stuff happen
     })();
 });
