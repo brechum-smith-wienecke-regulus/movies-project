@@ -3,7 +3,8 @@ body{
     font-style: oblique;
 }
 .movie-container{
-    border-color: yellow;
+    border: 1px solid #c69f26;
+    border-collapse: separate;
 }
 
 a {
