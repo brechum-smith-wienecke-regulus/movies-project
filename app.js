@@ -10,15 +10,17 @@ let DEBUG = {
 }
 
 $(document).ready(() => {
-
+    // our movie database url
     const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies/"
 
     // movieDisplay is the container for all of our movie card elements
     const movieDisplay = $("#movie-display")
-    // loading is a little div that we show while waiting for a get request to our database
-    const loading = $('#loading');
+    // this element is the button that allows user to access the add movie modal form
+    const userAddMovieButton = $('#create-add-form');
     // main content is everything outside of the nav, loading, and the modal forms
     const mainContent = $('#create-add-form, #movie-display');
+    // loading is a little div that we show while waiting for a get request to our database
+    const loading = $('#loading');
 
     // this function destroys all children of an element
     const destroyElementContents = (element) => {
@@ -63,7 +65,8 @@ $(document).ready(() => {
         // layer 1 event listener setup
         // setup card controls
         showMovieControls();
-
+        // take user input into filter textbox and appropriately manipulate visible movie cards
+        filterMovieList();
         // enable input for user to show form to add a film
         enableUserFormInput();
     }
@@ -82,12 +85,11 @@ $(document).ready(() => {
             <div class="card-footer justify-content-between d-flex">
                <button class="movie-details btn btn-primary">Details</button>
             </div>`
-        const movieContainer = $(document.createElement('div'))
+
+        return $(document.createElement('div'))
             .data('movie', movie)
             .addClass('movie-container col card')
             .append(movieHtml);
-
-        return movieContainer;
     }
 
     // this builds out a second hidden card containing the rest of each movie object's content
@@ -104,12 +106,11 @@ $(document).ready(() => {
                 <button type="button" class="movie-edit btn btn-primary" data-toggle="modal" data-target="#edit-form-modal">Edit</button>
                 <button class="movie-details-done btn btn-primary">Done</button>
             </div>`;
-        const movieDetailContainer = $(document.createElement('div'))
+
+        return $(document.createElement('div'))
             .data('movie', movie)
             .addClass('movie-container movie-details-container col card')
             .append(movieDetailHtml);
-
-        return movieDetailContainer
 
     }
 
@@ -172,13 +173,14 @@ $(document).ready(() => {
             $('.movie-container-bg-img').remove();
         });
 
+        // handle show/hide of extra details card with "details" button
         $('.movie-details').on('click', function (e) {
             $('.movie-details-container').each(function () {
                 $(this).remove();
             });
             e.preventDefault();
+            // get the card currently being targeted by the event
             const currentCard = $(this).parent().parent();
-            console.log(currentCard)
             currentCard.after(buildMovieDetails(currentCard.data('movie')));
             movieEditControlsListeners();
             $(this).remove();
@@ -406,16 +408,11 @@ $(document).ready(() => {
         destroyElementContents($('#add-movie-modal'));
 
         // userAddMovieButton toggles display of user's add movie form
-        const userAddMovieButton = $('#create-add-form');
         userAddMovieButton.show();
         userAddMovieButton.on('click', (e) => {
             e.preventDefault();
-            if (DEBUG.verbose) console.log('Create Add event', e)
             buildAddForm();
         });
-
-        $('#sort-select, #order-select').on('change', getMovies);
-
     }
 
     const filterMovieList = () => {
@@ -425,6 +422,8 @@ $(document).ready(() => {
               $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
             });
           });
+
+        $('#sort-select, #order-select').on('change', getMovies);
     }
 
     const dynamicSort = (property) => {
@@ -469,6 +468,5 @@ $(document).ready(() => {
     (() => {
         // grab movies and do setup work as soon as page loads
         getMovies();
-        filterMovieList();
     })();
 });
