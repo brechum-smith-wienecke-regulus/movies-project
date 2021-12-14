@@ -14,7 +14,6 @@ a{
 }
 
 .movie-poster {
-
     margin: 0 !important;
     padding: 0 !important;
     max-width: 100%;
@@ -25,6 +24,7 @@ a{
 }
 
 .movie-container {
+    border: 3px solid #c5961e;
     width: 20vw;
     height: 350px;
     position: relative;
