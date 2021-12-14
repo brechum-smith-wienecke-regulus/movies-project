@@ -11,7 +11,7 @@ let DEBUG = {
 
 $(document).ready(() => {
 
-    const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies"
+    const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies/"
 
     const movieDisplay = $("#movie-display")
 
@@ -389,23 +389,35 @@ $(document).ready(() => {
 
 
     const deleteMovie = (id) => {
+        sendDatabaseRequest('DELETE', id)
+            .then(getMovies);
+    }
+
+    const sendDatabaseRequest = async (method, id, movie) => {
         const options = {
-            method: 'DELETE',
+            method: method,
             headers: {
                 "Content-Type": "application/json",
             },
         }
-        fetch(`${movieAPI}/${id}`, options)
-            .then(response => response.json())
-            .then(data => {
-                if (DEBUG.verbose) console.log(data);
-                getMovies()
-            });
+        let url = movieAPI;
+        switch (method) {
+            case 'PUT':
+                url += id;
+            case 'POST':
+                options.body = JSON.stringify(movie);
+                break;
+            case 'DELETE':
+                url += id;
+        }
+        const response = await fetch(url, options);
+        return await response.json();
     }
 
 
     const buildAddForm = () => {
-        destroyElementContents($('#add-movie-modal'));
+        const addModal = $('#add-movie-modal');
+        destroyElementContents(addModal);
         // build our form to take user input for adding movies here
         let addForm = `
     <div class="modal-dialog">
@@ -440,7 +452,7 @@ $(document).ready(() => {
     </div>`;
 
         // display form for users
-        $('#add-movie-modal').append(addForm);
+        addModal.append(addForm);
 
         // setup click event
         $('#submit-add').on('click', (e) => {
@@ -502,7 +514,6 @@ $(document).ready(() => {
         }
 
         return function (a, b) {
-
             if(sortOrder === -1){
                 return b[property].toString().localeCompare(a[property]);
             }else{
@@ -511,20 +522,18 @@ $(document).ready(() => {
         }
     }
 
-    const addMovieDetails = (movie) => {
-        return new Promise( (resolve, reject) => {
-            fetchMovie(movie.title)
-                .then(data => {
-                    movie.year = data['Year'];
-                    movie.plot = data['Plot'];
-                    movie.poster = data['Poster'];
-                    movie.actors = data['Actors'];
-                    movie.director = data['Director'];
-                    movie.genre = data['Genre'];
-                    movie.title = data['Title'];
-                    return resolve(movie);
-                });
-        });
+    const addMovieDetails = async (movie) => {
+        return await fetchMovie(movie.title)
+            .then(data => {
+                movie.year = data['Year'];
+                movie.plot = data['Plot'];
+                movie.poster = data['Poster'];
+                movie.actors = data['Actors'];
+                movie.director = data['Director'];
+                movie.genre = data['Genre'];
+                movie.title = data['Title'];
+                return movie;
+            });
     }
 
     const fetchMovie = async (title) => {
