@@ -65,24 +65,6 @@ $(document).ready(() => {
                 // setup card controls
                 showMovieControls();
 
-                // setup event listener for edit buttons
-                $('.movie-edit').on('click', function (e) {
-                    e.preventDefault();
-                    if (DEBUG.verbose) console.log('User Edit event')
-                    // here we get the parent div of the clicked movie edit button, which
-                    // contains a jQuery data value that has had the corresponding movie object stored
-                    editMovie($(this).parent().parent().data('movie'));
-                });
-
-                // setup event listener for delete buttons
-                $('.movie-delete').on('click', function (e) {
-                    e.preventDefault();
-                    if (DEBUG.verbose) console.log('User Delete event');
-                    if (confirm(`Are you sure you want to delete ${$(this).parent().parent().data('movie').title}?`)) {
-                        deleteMovie($(this).parent().parent().data('movie').id)
-                    }
-                });
-
                 // enable input for user to show form to add a film
                 enableUserFormInput();
             })
@@ -103,19 +85,42 @@ $(document).ready(() => {
             : movie.poster}">
             <div class="card-body">
                 <h5 class="card-title">${movie.title}</h5>
-                <p class="card-text">rating: ${movie.rating}</p>
-                <p class="card-text">genre: ${movie.genre}</p>
+                <p class="card-text">Rating: ${movie.rating}/5</p>
+                <p class="card-text">Genre: ${movie.genre}</p>
             </div>
-            <div class="card-footer justify-content-end">
-                <button type="button" class="movie-edit btn btn-primary mr-3" data-toggle="modal" data-target="#edit-form-modal">Edit</button>
-                <button class="movie-delete btn btn-danger">Delete</button>
+            <div class="card-footer justify-content-between d-flex">
+               <button class="movie-details btn btn-primary">Details</button>
             </div>`
+        // <button class="movie-delete btn btn-primary">Delete</button>
+        //                 <button type="button" class="movie-edit btn btn-primary" data-toggle="modal" data-target="#edit-form-modal">Edit</button>
         const movieContainer = $(document.createElement('div'))
             .data('movie', movie)
             .addClass('movie-container col card')
             .append(movieHtml);
 
         return movieContainer;
+    }
+
+    const buildMovieDetails = (movie) => {
+        let movieDetailHtml = `
+            <div class="card-body overflow-auto">
+                <p class="card-text card-details">${movie.year}</p>
+                <p class="card-text card-details">Director: ${movie.director}</p>
+                <p class="card-text card-details">Actors: ${movie.actors}</p>
+                <p class="card-text card-details">${movie.plot}</p>
+            </div>
+            <div class="card-footer justify-content-between d-flex">
+                <button class="movie-delete btn btn-primary">Delete</button>
+                <button type="button" class="movie-edit btn btn-primary" data-toggle="modal" data-target="#edit-form-modal">Edit</button>
+                <button class="movie-details-done btn btn-primary">Done</button>
+            </div>`;
+        const movieDetailContainer = $(document.createElement('div'))
+            .data('movie', movie)
+            .addClass('movie-container movie-details-container col card')
+            .append(movieDetailHtml);
+
+        return movieDetailContainer
+
     }
 
     const addMovie = (rating, title, genre) => {
@@ -202,7 +207,7 @@ $(document).ready(() => {
             $(this).children('.card-img-top')
                 .css('display', 'none');
             $(this)
-                .css('background-color', 'rgba(255,255,255,.8)')
+                .css('background-color', 'rgba(255,255,255,.7)')
                 .prepend($(document.createElement('div'))
                     .addClass('movie-container-bg-img')
                     .css('background-image', `url(${ $(this).data('movie').poster })`))
@@ -217,6 +222,40 @@ $(document).ready(() => {
             $(this)
                 .css('background-color', 'var(--bg-color-light)');
             $('.movie-container-bg-img').remove();
+        });
+
+        $('.movie-details').on('click', function (e) {
+            e.preventDefault();
+            const currentCard = $(this).parent().parent();
+            console.log(currentCard)
+            currentCard.after(buildMovieDetails(currentCard.data('movie')));
+            movieEditControlsListeners();
+            $(this).remove();
+
+            $('.movie-details-done').on('click', function (e) {
+                e.preventDefault();
+                getMovies();
+            });
+        });
+    }
+
+    const movieEditControlsListeners = () => {
+        // setup event listener for edit buttons
+        $('.movie-edit').on('click', function (e) {
+            e.preventDefault();
+            if (DEBUG.verbose) console.log('User Edit event')
+            // here we get the parent div of the clicked movie edit button, which
+            // contains a jQuery data value that has had the corresponding movie object stored
+            editMovie($(this).parent().parent().data('movie'));
+        });
+
+        // setup event listener for delete buttons
+        $('.movie-delete').on('click', function (e) {
+            e.preventDefault();
+            if (DEBUG.verbose) console.log('User Delete event');
+            if (confirm(`Are you sure you want to delete ${$(this).parent().parent().data('movie').title}?`)) {
+                deleteMovie($(this).parent().parent().data('movie').id)
+            }
         });
     }
 
