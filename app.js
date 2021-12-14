@@ -13,11 +13,15 @@ $(document).ready(() => {
 
     const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies/"
 
+    // movieDisplay is the container for all of our movie card elements
     const movieDisplay = $("#movie-display")
+    // loading is a little div that we show while waiting for a get request to our database
+    const loading = $('#loading');
+    // main content is everything outside of the nav, loading, and the modal forms
+    const mainContent = $('#create-add-form, #movie-display');
 
     // this function destroys all children of an element
     const destroyElementContents = (element) => {
-        if (DEBUG.verbose) console.log('Destroying element:', element);
         while (element.get(0).firstChild) {
             // using .get(0) here unwraps the element out of jQuery and back into vanilla JS
             element.get(0).removeChild(element.get(0).lastChild);
@@ -25,64 +29,51 @@ $(document).ready(() => {
         return element;
     }
 
-    const getMovies = () => {
+    // getMovies dumps the current contents of movieDisplay, fetches from our database, sorts and redraws the contents,
+    // and sets up the first layer of event listeners
+    const getMovies = async () => {
         // might as well switch the loading element back in while waiting for response
-        $('#loading').show();
+        loading.show();
         // only loading element should be visible, all elements depending on response should be hidden
-        $('#create-add-form, #movie-display').hide();
+        mainContent.hide();
         // clear out the old contents of movie-display while we prepare to build the new contents from response
         destroyElementContents(movieDisplay);
 
-        const options = {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json",
-            }
+        // we grab the contents of our database
+        const movies = await sendDatabaseRequest('GET')
+        // now we can show our movie database data and controls
+        mainContent.show()
+        // hide loading
+        loading.hide();
+        // we can change the order here
+        const sortBy = $('#sort-select').val();
+        const sortIn = $('#order-select').val();
+        // if sort-select is left on default we skip sorting our movie content
+        if (sortBy !== 'default') {
+            movies.sort(dynamicSort(`${sortIn}${sortBy}`));
+        } else if (sortIn === '-') { // unless the order is set to '-'/descending where we just reverse it
+            movies.reverse();
         }
-        fetch(movieAPI, options)
-            .then(response => response.json())
-            .then(movies => {
-                if (DEBUG.verbose) console.log(movies);
-                // now we can show our movie database data and controls
-                $('#create-add-form, #movie-display').show()
-                // hide loading
-                $('#loading').hide();
-                // we can change the order here
-                const sortBy = $('#sort-select').val();
-                const sortIn = $('#order-select').val();
-                console.log('sort in', sortIn, 'sort by', sortBy);
-                if (sortBy !== 'default') {
-                    movies.sort(dynamicSort(`${sortIn}${sortBy}`));
-                } else if (sortIn === '-') {
-                    movies.reverse();
-                }
-                // map each movie returned from db into a new array of html strings
-                const movieList = movies.map(movie => renderMovie(movie));
 
-                // draw movies on screen
-                movieDisplay.append(movieList);
+        // map each movie returned from db into a new array of html strings
+        const movieList = movies.map(movie => renderMovie(movie));
+        // draw movies on screen
+        movieDisplay.append(movieList);
 
-                // setup card controls
-                showMovieControls();
+        // layer 1 event listener setup
+        // setup card controls
+        showMovieControls();
 
-                // enable input for user to show form to add a film
-                enableUserFormInput();
-            })
-    }
-
-    const hideLoading = () => {
-        $("#loading").hide();
+        // enable input for user to show form to add a film
+        enableUserFormInput();
     }
 
     // build a single movie element for the page
-    // takes a movie, returns a string made from that movie formatted in html
-
-
+    // takes a movie object, returns a string made from that movie formatted into html
     const renderMovie = (movie) => {
-        let movieHtml =
-            `<img class="movie-poster mr-2 pr-2 card-img-top" src="${(movie.poster === 'noimage')
-            ? 'https://dummyimage.com/200x400/BBB/202020.png&text=No+Poster+Available' 
-            : movie.poster}">
+        const movieHtml = `
+            <img class="movie-poster mr-2 pr-2 card-img-top" src="${(movie.poster === 'noimage') ? 
+                'https://dummyimage.com/200x400/BBB/202020.png&text=No+Poster+Available' : movie.poster}">
             <div class="card-body">
                 <h5 class="card-title">${movie.title}</h5>
                 <p class="card-text">Rating: ${movie.rating}/5</p>
@@ -91,8 +82,6 @@ $(document).ready(() => {
             <div class="card-footer justify-content-between d-flex">
                <button class="movie-details btn btn-primary">Details</button>
             </div>`
-        // <button class="movie-delete btn btn-primary">Delete</button>
-        //                 <button type="button" class="movie-edit btn btn-primary" data-toggle="modal" data-target="#edit-form-modal">Edit</button>
         const movieContainer = $(document.createElement('div'))
             .data('movie', movie)
             .addClass('movie-container col card')
@@ -101,8 +90,9 @@ $(document).ready(() => {
         return movieContainer;
     }
 
+    // this builds out a second hidden card containing the rest of each movie object's content
     const buildMovieDetails = (movie) => {
-        let movieDetailHtml = `
+        const movieDetailHtml = `
             <div class="card-body overflow-auto">
                 <p class="card-text card-details">${movie.year}</p>
                 <p class="card-text card-details">Director: ${movie.director}</p>
@@ -128,27 +118,34 @@ $(document).ready(() => {
         const movies = await sendDatabaseRequest('GET');
         // get an array of all existing ids in database
         const existingIds = movies.map(movie => movie.id);
-        // now we work through the existing ids looking for the first available unused number for the new id
+        // now we work through the existing ids looking for the first available unused number for the new id that isn't 0
         let newId = null;
+        // iterate from 0 to length of existing IDs
         for (let i = 0; i < existingIds.length; i++) {
+            // if existing IDs do not include the current value of i + 1 (keeping offset from 0)...
             if (!existingIds.includes(i + 1)) {
+                // ...i + 1 is our new ID, exit early
                 newId = i + 1;
                 break;
             }
+            // if we've checked all values between 1 and the length of the array, new ID will be 1 more
+            // than the last existing id
             if (i + 1 === existingIds.length) newId = existingIds.length + 1;
         }
         // we can go through with the request so long as the id assignment was successful
         if (newId !== null) {
-            // blast off our new movie's provided details
-            const movie = await addMovieDetails({title: title, rating: rating, id: newId})
+            // blast off our new movie's provided details for property inflation by omdb
+            const movie = await addMovieDetails({title: title, rating: rating, id: newId});
+            // add the completed film to our database and get it all in our browser
             sendDatabaseRequest('POST', movie.id, movie)
                 .then(getMovies);
         } else {
-            console.error('ID assignment issue, cancelling post request');
+            console.error('Post request aborted, id assignment error.');
         }
     }
 
     const showMovieControls = () => {
+        // this is kind of ridiculous
         $('.movie-container').hover(function () {
             $(this).children('.card-footer')
                 .css('visibility', 'visible')
@@ -224,40 +221,40 @@ $(document).ready(() => {
 
         // all styling and structure for the edit form is done here
         let formHtml = `
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editFormTitle">Editing ${movie.title}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-                        <div class="modal-body d-flex">
-                <div class="flex-grow-1">
-                    <label class="mt-2" for="title">Title</label>
-                    <input class="form-control" type="text" id="title" value="${movie.title}">
-                    <label class="mt-2" for="new-rating">Rating</label>
-                    <input class="form-control" type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
-                    <label class="mt-2" for="director">Director</label>
-                    <input class="form-control" type="text" id="director" value="${movie.director}">
-                    <label class="mt-2" for="year">Year</label>
-                    <input class="form-control" type="text" id="year" value="${movie.year}">
-                    <label class="mt-2" for="genre">Genre</label>
-                    <input class="form-control" type="text" id=genre value="${movie.genre}">
-                    <label class="mt-2" for="poster">Poster</label>
-                    <input class="form-control" type="text" id="poster" value="${movie.poster}">
-                    <label class="mt-2" for="plot">Plot</label>
-                    <textarea class="form-control" id="plot" rows="4">${movie.plot}</textarea>
-                    <label class="mt-2" for="actors">Actors</label>
-                    <input class="form-control" type="text" id="actors" value="${movie.actors}">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editFormTitle">Editing ${movie.title}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body d-flex">
+                    <div class="flex-grow-1">
+                        <label class="mt-2" for="title">Title</label>
+                        <input class="form-control" type="text" id="title" value="${movie.title}">
+                        <label class="mt-2" for="new-rating">Rating</label>
+                        <input class="form-control" type="number" id="new-rating" name="new-rating" min="1" max="5" value="${movie.rating}">
+                        <label class="mt-2" for="director">Director</label>
+                        <input class="form-control" type="text" id="director" value="${movie.director}">
+                        <label class="mt-2" for="year">Year</label>
+                        <input class="form-control" type="text" id="year" value="${movie.year}">
+                        <label class="mt-2" for="genre">Genre</label>
+                        <input class="form-control" type="text" id=genre value="${movie.genre}">
+                        <label class="mt-2" for="poster">Poster</label>
+                        <input class="form-control" type="text" id="poster" value="${movie.poster}">
+                        <label class="mt-2" for="plot">Plot</label>
+                        <textarea class="form-control" id="plot" rows="4">${movie.plot}</textarea>
+                        <label class="mt-2" for="actors">Actors</label>
+                        <input class="form-control" type="text" id="actors" value="${movie.actors}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-edit">Close</button>
+                    <button type="button" class="btn btn-primary" id="submit-edit">Save</button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-edit">Close</button>
-                <button type="button" class="btn btn-primary" id="submit-edit">Save</button>
-            </div>
-        </div>
-    </div>`;
+        </div>`;
 
         editForm.append(formHtml);
 
@@ -310,7 +307,6 @@ $(document).ready(() => {
             .catch(movie => {
                 // general catch-all for issues with editing. picture will break
                 console.error('Some issue with movie editing.', movie);
-                movie.poster = 'noimage';
                 sendDatabaseRequest('PUT', movie.id, movie)
                     .then(getMovies);
             });
