@@ -352,39 +352,14 @@ $(document).ready(() => {
         destroyElementContents(editForm);
         addMovieDetails(newMovie)
             .then(movie => {
-                if (DEBUG.verbose) console.log(movie);
-                const options = {
-                    method: 'PUT',
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(movie)
-                }
-                fetch(`${movieAPI}/${movie.id}`, options)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (DEBUG.verbose) console.log(data)
-                        getMovies();
-                    });
+                sendDatabaseRequest('PUT', movie.id, movie)
+                    .then(getMovies);
             })
             .catch(movie => {
                 movie.poster = 'noimage';
-                console.log(movie);
-                const options = {
-                    method: 'PUT',
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(movie)
-                }
-                fetch(`${movieAPI}/${movie.id}`, options)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (DEBUG.verbose) console.log(data)
-                        getMovies();
-                    });
+                sendDatabaseRequest('PUT', movie.id, movie)
+                    .then(getMovies);
             });
-
     }
 
 
