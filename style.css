@@ -21,6 +21,10 @@
     padding: 0;
     background-color: var(--bg-color-light);
 }
+.card-title {
+    line-height: 20px;
+    height: 40px;
+}
 
 .card-body {
 

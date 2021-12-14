@@ -1,4 +1,8 @@
+
+"use strict";
+
 // this debug object has several flags that can be useful for debugging different parts of the app
+
 let DEBUG = {
     // verbose: when true, many different important steps of the app will have details printed into the console
     //          default - false
@@ -7,7 +11,6 @@ let DEBUG = {
 
 $(document).ready(() => {
 
-    "use strict";
     const movieAPI = "https://pushy-paint-hippopotamus.glitch.me/movies"
 
     const movieDisplay = $("#movie-display")
@@ -194,8 +197,8 @@ $(document).ready(() => {
             $(this).children('.card-footer')
                 .css('visibility', 'visible')
                 .css('position', 'relative');
-            $(this).children('.card-text')
-                .css('display', 'inline-block');
+            $(this).children().children('.card-text')
+                .css('display', 'block');
             $(this).children('.card-img-top')
                 .css('display', 'none');
             $(this)
@@ -209,7 +212,7 @@ $(document).ready(() => {
                 .css('position', 'absolute');
             $(this).children('.card-img-top')
                 .css('display', 'inline-block');
-            $(this).children('.card-text')
+            $(this).children().children('.card-text')
                 .css('display', 'none');
             $(this)
                 .css('background-color', 'var(--bg-color-light)');
