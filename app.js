@@ -109,8 +109,7 @@ $(document).ready(() => {
             </div>`
         const movieContainer = $(document.createElement('div'))
             .data('movie', movie)
-            .addClass('movie-container col card p-1')
-            .css('width', '23vw')
+            .addClass('movie-container col card')
             .append(movieHtml);
 
         return movieContainer;
@@ -194,11 +193,27 @@ $(document).ready(() => {
         $('.movie-container').hover(function () {
             $(this).children('.card-footer')
                 .css('visibility', 'visible')
-                .css('position', 'relative')
+                .css('position', 'relative');
+            $(this).children('.card-text')
+                .css('display', 'inline-block');
+            $(this).children('.card-img-top')
+                .css('display', 'none');
+            $(this)
+                .css('background-color', 'rgba(255,255,255,.8)')
+                .prepend($(document.createElement('div'))
+                    .addClass('movie-container-bg-img')
+                    .css('background-image', `url(${ $(this).data('movie').poster })`))
         }, function () {
             $(this).children('.card-footer')
                 .css('visibility', 'hidden')
-                .css('position', 'absolute')
+                .css('position', 'absolute');
+            $(this).children('.card-img-top')
+                .css('display', 'inline-block');
+            $(this).children('.card-text')
+                .css('display', 'none');
+            $(this)
+                .css('background-color', 'var(--bg-color-light)');
+            $('.movie-container-bg-img').remove();
         });
     }
 
