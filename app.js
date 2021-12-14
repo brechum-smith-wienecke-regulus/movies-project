@@ -161,7 +161,7 @@ $(document).ready(() => {
                         actors: "",
                         id: newId,
                     }
-                    addPoster(movie)
+                    addMovieDetails(movie)
                         .then(movie => {
                             if (DEBUG.verbose) console.log(movie);
                             const options = {
@@ -225,6 +225,9 @@ $(document).ready(() => {
         });
 
         $('.movie-details').on('click', function (e) {
+            $('.movie-details-container').each(function () {
+                $(this).remove();
+            });
             e.preventDefault();
             const currentCard = $(this).parent().parent();
             console.log(currentCard)
@@ -347,7 +350,7 @@ $(document).ready(() => {
 
         // we are done with the edit form contents, destroy them
         destroyElementContents(editForm);
-        addPoster(newMovie)
+        addMovieDetails(newMovie)
             .then(movie => {
                 if (DEBUG.verbose) console.log(movie);
                 const options = {
@@ -518,7 +521,7 @@ $(document).ready(() => {
         });
     }
 
-    const addPoster = (movie) => {
+    const addMovieDetails = (movie) => {
         return new Promise((resolve, reject) => {
             if (movie.poster === 'undefined' || movie.poster === '') {
                 let query = movie.title.split('+');
@@ -528,14 +531,31 @@ $(document).ready(() => {
                         "Content-Type": "application/json",
                     },
                 }
+                // here begins a brutal roundabout of API requests to assemble poster image path and movie details
                 fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
                     .then(response => response.json())
                     .then(data => {
                         if (data.results.length === 0) return reject(movie);
                         let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
                         movie.poster = url;
+                        movie.plot = data.results[0].overview;
+                        movie.year = data.results[0].release_date.substr(0, 4);
                         console.log(data);
-                        return resolve(movie);
+                        let tmdbId = data.results[0].id;
+                        fetch(`https://api.themoviedb.org/3/movie/${tmdbId}/external_ids?api_key=${TMDB_KEY}`, options)
+                            .then(response => response.json())
+                            .then(data => {
+                                let imdbId = data.imdb_id;
+                                fetch(`http://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        movie.actors = data['Actors'];
+                                        movie.director = data['Director'];
+                                        movie.genre = data['Genre'];
+                                        movie.title = data['Title'];
+                                        return resolve(movie);
+                                    });
+                            });
                     });
             } else {
                 return resolve(movie);
