@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="style.css">
 
 </head>
-<body class="container-fluid">
-<nav class="navbar navbar-light bg-light my-3">
+<body class="">
+<nav class="navbar navbar-light bg-light py-3 m-0">
   <a class="navbar-brand">Movies</a>
   <form class="form-inline">
     <input class="form-control mr-sm-2" type="search" placeholder="Filter" aria-label="Filter" id="movie-filter">
@@ -21,15 +21,17 @@
       <option value="rating">Rating</option>
     </select>
     <select class="form-control mr-sm-2" id="order-select">
-      <option value="" selected>Descending</option>
-      <option value="-">Ascending</option>
+      <option value="" selected>Ascending</option>
+      <option value="-">Descending</option>
     </select>
   </form>
 </nav>
+<section id="content" class="container-fluid">
+
 <div style="width: 100vw; height: 100vh" class="text-center" id="loading">
   <h4>Loading...</h4><img src="loadinfo.net.gif" alt="loading gif" id="loading-gif">
 </div>
-<div id="movie-display" class="row m-n1"></div>
+<div id="movie-display" class="row row-cols-2 row-cols-md-3 row-cols-lg-5"></div>
 
 <button id="create-add-form" class="btn btn-block btn-primary my-2" data-toggle="modal" data-target="#add-movie-modal">Add a movie</button>
 <div id="add-movie-modal" class="modal fade" tabindex="-1" aria-labelledby="addMovieModal" aria-hidden="true">
@@ -37,6 +39,7 @@
 
 <div class="modal fade" id="edit-form-modal" tabindex="-2" aria-labelledby="editFormModal" aria-hidden="true">
 </div>
+</section>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 <script src="keys.js"></script>
