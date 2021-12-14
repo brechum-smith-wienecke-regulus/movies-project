@@ -1,3 +1,15 @@
+body{
+    background-color: #030241;
+    font-style: oblique;
+}
+.movie-container{
+    border-color: yellow;
+}
+
+a {
+    font-weight: bolder;
+}
+
 .movie-poster {
 
 /* at 4 cols wide img should be roughly 350px tall */
