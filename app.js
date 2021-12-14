@@ -522,45 +522,25 @@ $(document).ready(() => {
     }
 
     const addMovieDetails = (movie) => {
-        return new Promise((resolve, reject) => {
-            if (movie.poster === 'undefined' || movie.poster === '') {
-                let query = movie.title.split('+');
-                const options = {
-                    method: 'GET',
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-                // here begins a brutal roundabout of API requests to assemble poster image path and movie details
-                fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${query}`, options)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.results.length === 0) return reject(movie);
-                        let url = `https://image.tmdb.org/t/p/w500/${data.results[0].poster_path}`
-                        movie.poster = url;
-                        movie.plot = data.results[0].overview;
-                        movie.year = data.results[0].release_date.substr(0, 4);
-                        console.log(data);
-                        let tmdbId = data.results[0].id;
-                        fetch(`https://api.themoviedb.org/3/movie/${tmdbId}/external_ids?api_key=${TMDB_KEY}`, options)
-                            .then(response => response.json())
-                            .then(data => {
-                                let imdbId = data.imdb_id;
-                                fetch(`http://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        movie.actors = data['Actors'];
-                                        movie.director = data['Director'];
-                                        movie.genre = data['Genre'];
-                                        movie.title = data['Title'];
-                                        return resolve(movie);
-                                    });
-                            });
-                    });
-            } else {
-                return resolve(movie);
-            }
-        })
+        return new Promise( (resolve, reject) => {
+            fetchMovie(movie.title)
+                .then(data => {
+                    movie.year = data['Year'];
+                    movie.plot = data['Plot'];
+                    movie.poster = data['Poster'];
+                    movie.actors = data['Actors'];
+                    movie.director = data['Director'];
+                    movie.genre = data['Genre'];
+                    movie.title = data['Title'];
+                    return resolve(movie);
+                });
+        });
+    }
+
+    const fetchMovie = async (title) => {
+        const response = await fetch(`http://www.omdbapi.com/?t=${title}&apikey=${OMDB_KEY}`);
+        if (!response.ok) throw new Error (`${response.status}`)
+        return await response.json();
     }
 
     // all actual work done that is not simply function definitions should go in here to keep organized :)
