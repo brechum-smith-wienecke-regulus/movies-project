@@ -502,23 +502,13 @@ $(document).ready(() => {
         }
 
         return function (a, b) {
-            // if (property === 'genre') {
-            //     a = a.join(' ');
-            //     b = b.join(' ');
-            // }
+
             if(sortOrder === -1){
                 return b[property].toString().localeCompare(a[property]);
             }else{
                 return a[property].toString().localeCompare(b[property]);
             }
         }
-    }
-
-    const sortMovieProperties = () => {
-        $('#sort-select').on('change', function () {
-            // dynamicSort($(this).val())
-            getMovies();
-        });
     }
 
     const addMovieDetails = (movie) => {
