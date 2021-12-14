@@ -123,78 +123,29 @@ $(document).ready(() => {
 
     }
 
-    const addMovie = (rating, title, genre) => {
+    const addMovie = async (rating, title, genre) => {
         // we look up the latest status from the database regarding movies so we avoid id collision
-        fetch(movieAPI, {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json",
+        const movies = await sendDatabaseRequest('GET');
+        // get an array of all existing ids in database
+        const existingIds = movies.map(movie => movie.id);
+        // now we work through the existing ids looking for the first available unused number for the new id
+        let newId = null;
+        for (let i = 0; i < existingIds.length; i++) {
+            if (!existingIds.includes(i + 1)) {
+                newId = i + 1;
+                break;
             }
-        })
-            .then(response => response.json())
-            .then(movies => {
-                // get an array of all existing ids in database
-                const existingIds = movies.map(movie => movie.id);
-                // now we work through the existing ids looking for the first available unused number for the new id
-                let newId = null;
-                for (let i = 0; i < existingIds.length; i++) {
-                    if (!existingIds.includes(i + 1)) {
-                        newId = i + 1;
-                        break;
-                    }
-                    if (i + 1 === existingIds.length) newId = existingIds.length + 1;
-                    console.log('checking id', i+1);
-                }
-                // we really do not want to push objects to our database that have bad ids
-                // using try catch here to prevent submitting new films with unset IDs
-                try {
-                    // if newId is still null, we throw and exit the request
-                    if (newId === null) throw 'ID assignment issue, cancelling post request';
-                    const movie = {
-                        title: title,
-                        rating: rating,
-                        director: "",
-                        year: "",
-                        genre: genre,
-                        poster: "",
-                        plot: "",
-                        actors: "",
-                        id: newId,
-                    }
-                    addMovieDetails(movie)
-                        .then(movie => {
-                            if (DEBUG.verbose) console.log(movie);
-                            const options = {
-                                method: 'POST',
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify(movie)
-                            }
-                            if (DEBUG.verbose) console.log('Adding:', movie);
-                            return fetch(movieAPI, options)
-                                .then(response => response.json())
-                                .then(getMovies);
-                        })
-                        .catch(movie => {
-                            movie.poster = 'noimage';
-                            if (DEBUG.verbose) console.log(movie);
-                            const options = {
-                                method: 'POST',
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify(movie)
-                            }
-                            if (DEBUG.verbose) console.log('Adding:', movie);
-                            return fetch(movieAPI, options)
-                                .then(response => response.json())
-                                .then(getMovies);
-                        });
-                } catch (error) {
-                    console.error(error)
-                }
-            });
+            if (i + 1 === existingIds.length) newId = existingIds.length + 1;
+        }
+        // we can go through with the request so long as the id assignment was successful
+        if (newId !== null) {
+            // blast off our new movie's provided details
+            const movie = await addMovieDetails({title: title, rating: rating, id: newId})
+            sendDatabaseRequest('POST', movie.id, movie)
+                .then(getMovies);
+        } else {
+            console.error('ID assignment issue, cancelling post request');
+        }
     }
 
     const showMovieControls = () => {
@@ -350,18 +301,20 @@ $(document).ready(() => {
 
         // we are done with the edit form contents, destroy them
         destroyElementContents(editForm);
+        // fill out any missing details from omdb
         addMovieDetails(newMovie)
             .then(movie => {
                 sendDatabaseRequest('PUT', movie.id, movie)
                     .then(getMovies);
             })
             .catch(movie => {
+                // general catch-all for issues with editing. picture will break
+                console.error('Some issue with movie editing.', movie);
                 movie.poster = 'noimage';
                 sendDatabaseRequest('PUT', movie.id, movie)
                     .then(getMovies);
             });
     }
-
 
     const deleteMovie = (id) => {
         sendDatabaseRequest('DELETE', id)
@@ -389,42 +342,41 @@ $(document).ready(() => {
         return await response.json();
     }
 
-
     const buildAddForm = () => {
         const addModal = $('#add-movie-modal');
         destroyElementContents(addModal);
         // build our form to take user input for adding movies here
         let addForm = `
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addFormTitle">Add a Movie</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body d-flex" id="add-movie">
-                <div class="flex-grow-1">
-                    <label for="add-title">Title</label>
-                    <input class="form-control" id="add-title" type="text" placeholder="">
-                    <label for="rating">Rating</label>
-                    <select class="form-control" id="add-rating" name="rating">
-                        <option value="1"> 1</option>
-                        <option value="2">2</option>
-                        <option selected value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                    <label for="add-genre">Genre</label>
-                    <input class="form-control" id="add-genre" type="text" placeholder="">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFormTitle">Add a Movie</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body d-flex" id="add-movie">
+                    <div class="flex-grow-1">
+                        <label for="add-title">Title</label>
+                        <input class="form-control" id="add-title" type="text" placeholder="">
+                        <label for="rating">Rating</label>
+                        <select class="form-control" id="add-rating" name="rating">
+                            <option value="1"> 1</option>
+                            <option value="2">2</option>
+                            <option selected value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        <label for="add-genre">Genre</label>
+                        <input class="form-control" id="add-genre" type="text" placeholder="">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-add">Close</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit-add">Save</button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="reset-add">Close</button>
-                <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit-add">Save</button>
-            </div>
-        </div>
-    </div>`;
+        </div>`;
 
         // display form for users
         addModal.append(addForm);
@@ -522,6 +474,5 @@ $(document).ready(() => {
         // grab movies and do setup work as soon as page loads
         getMovies();
         filterMovieList();
-
     })();
 });
